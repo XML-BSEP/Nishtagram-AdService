@@ -1,9 +1,9 @@
-package domen
+package domain
 
 import "time"
 
 type Like struct {
-	ID uint64
+	ID string
 	Timestamp time.Time
 	AdPostID uint64
 

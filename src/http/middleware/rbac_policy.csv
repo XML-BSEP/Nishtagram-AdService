@@ -1,0 +1,4 @@
+p, AGENT, /ad/createAd, *
+p, AGENT, /ad/createDisposableCampaign, *
+p, AGENT, /ad/createMultipleCampaign, *
+p, AGENT, /ad/getAdsByAgent, *

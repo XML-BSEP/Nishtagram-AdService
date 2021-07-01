@@ -1,4 +1,4 @@
-package domen
+package domain
 
 type Location struct {
 	Location string

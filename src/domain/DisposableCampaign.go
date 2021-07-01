@@ -1,4 +1,4 @@
-package domen
+package domain
 
 import "time"
 
@@ -9,13 +9,19 @@ const (
 	REJECTED
 	CREATED
 )
+type Type int
+
+const (
+	STORY Type = iota
+	POST
+)
 
 type DisposableCampaign struct {
 	ID uint64 `json:"id"`
-	PlacedTime time.Time
+	AgentId Profile
 	ExposureDate time.Time
 	Status Status
 	Timestamp time.Time
-	DisposableCampaigns []DisposableCampaign
-	MultipleCampaigns []MultipleCampaign
+	Post []AdPost
+	Type Type
 }

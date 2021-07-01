@@ -1,4 +1,4 @@
-package domen
+package domain
 
 import "time"
 
@@ -9,18 +9,17 @@ const (
 	VIDEO
 )
 type AdPost struct {
-	ID uint64 `json:"id"`
+	ID string `json:"id"`
 	Path string
 	Description string
 	Type MediaType
+	AgentId Profile
 	Timestamp time.Time
-	NumOfLikes uint
-	NumOfDislikes uint
-	NumOfComments uint
+	NumOfLikes int
+	NumOfDislikes int
+	NumOfComments int
 	Banned bool
 	Link string
-	HashTags []HashTag
-	Location Location
-	DisposableCampaignID uint64
-	MultipleCampaignID uint64
+	HashTags []string
+	Location string
 }

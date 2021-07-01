@@ -1,12 +1,13 @@
-package domen
+package domain
 
 import "time"
 
 type Favorites struct {
-	ID uint64
+	ID string
 	Timestamp time.Time
 	AdPost AdPost
-	AdPostID uint64
+	AdPostID string
 	Profile Profile
-	ProfileID uint64
+	ProfileID string
 }
+
