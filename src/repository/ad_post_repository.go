@@ -11,7 +11,7 @@ import (
 
 const (
 	CreateAdPostRepo = "CREATE TABLE IF NOT EXISTS adpost_keyspace.AdPosts (id text, agent_id text, media text, description text, " +
-		"timestamp timestamp, link string, hashtags list<text>, location string, type int, num_of_likes int, num_of_dislikes int, PRIMARY KEY(agent_id, id));"
+		"timestamp timestamp, link text, hashtags list<text>, location text, type int, num_of_likes int, num_of_dislikes int, PRIMARY KEY(agent_id, id));"
 	InsertIntoAdPostRepo = "INSERT INTO adpost_keyspace.AdPosts (id, agent_id, media, description, timestamp, link, hashtags, location, type, num_of_likes, num_of_dislikes) " +
 		"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) IF NOT EXISTS;"
 	DeleteFromAdPostRepo = "DELETE FROM adpost_keyspace.AdPosts WHERE id = ? AND agent_id = ?;"

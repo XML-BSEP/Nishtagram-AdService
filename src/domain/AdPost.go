@@ -10,16 +10,16 @@ const (
 )
 type AdPost struct {
 	ID string `json:"id"`
-	Path string
-	Description string
-	Type MediaType
+	Path string `json:"media"`
+	Description string `json:"description"`
+	Type MediaType `json:"type"`
 	AgentId Profile
 	Timestamp time.Time
 	NumOfLikes int
 	NumOfDislikes int
 	NumOfComments int
 	Banned bool
-	Link string
-	HashTags []string
-	Location string
+	Link string `json:"link"`
+	HashTags []string `json:"hashtags"`
+	Location string `json:"location"`
 }

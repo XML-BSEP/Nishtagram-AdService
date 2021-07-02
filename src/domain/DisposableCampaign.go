@@ -17,11 +17,11 @@ const (
 )
 
 type DisposableCampaign struct {
-	ID uint64 `json:"id"`
+	ID string `json:"id"`
 	AgentId Profile
-	ExposureDate time.Time
+	ExposureDate time.Time `json:"exposureDate"`
 	Status Status
 	Timestamp time.Time
-	Post []AdPost
-	Type Type
+	Post []AdPost `json:"ads"`
+	Type Type `json:"type"`
 }
