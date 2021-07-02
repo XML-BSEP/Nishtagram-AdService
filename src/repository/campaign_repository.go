@@ -14,7 +14,7 @@ const (
 	InsertIntoDisposableCampaign = "INSERT INTO adpost_keyspace.DisposableCampaigns (id, agent_id, exposure_date, status, timestamp, ad_id, type) VALUES (?, ?, ?, ?, ?, ?, ?) IF NOT EXISTS;"
 	InsertIntoMultipleCampaign = "INSERT INTO adpost_keyspace.MultipleCampaigns (id, agent_id, start_date, end_date, frequency, timestamp, ad_id, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?) IF NOT EXISTS;"
 	GetAllDisposableCampaigns = "SELECT id, exposure_date, status, timestamp, ad_id, type FROM adpost_keyspace.DisposableCampaigns WHERE agent_id = ?;"
-	GetAllMultipleCampaigns = "SELECT id, start_date, end_date, frequency, status, timestamp, ad_id, type FROM adpost_keyspace.MultipleCampaigns WHERE agent_id;"
+	GetAllMultipleCampaigns = "SELECT id, start_date, end_date, frequency, status, timestamp, ad_id, type FROM adpost_keyspace.MultipleCampaigns WHERE agent_id = ?;"
 	UpdateMultipleCampaign = "UPDATE adpost_keyspace.MultipleCampaigns SET start_date = ?, end_date = ?, frequency = ? WHERE id = ? AND agent_id = ?;"
 	DeleteMultipleCampaign = "DELETE FROM adpost_keyspace.MultipleCampaigns WHERE id = ? AND agent_id = ?;"
 	DeleteDisposableCampaign = "DELETE FROM adpost_keyspace.DisposableCampaigns WHERE id = ? AND agent_id = ?;"
