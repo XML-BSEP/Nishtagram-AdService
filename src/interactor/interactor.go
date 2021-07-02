@@ -43,7 +43,7 @@ func (i interctor) NewAdPostUseCase() usecase.AdPostUseCase {
 }
 
 func (i interctor) NewCampaignUseCase() usecase.CampaignUseCase {
-	return usecase.NewCampaignUseCase(i.NewCampaignRepo())
+	return usecase.NewCampaignUseCase(i.NewCampaignRepo(), i.NewAdPostUseCase())
 }
 
 func (i interctor) NewAdPostHandler() handler.AdHandler {

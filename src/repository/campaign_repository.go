@@ -50,7 +50,7 @@ func (c campaignRepository) GetAllMultipleCampaignsForAgent(ctx context.Context,
 		for _, a := range adIds {
 			ads = append(ads, domain.AdPost{ID: a})
 		}
-		retVal = append(retVal, domain.MultipleCampaign{ID: id, Post: ads, AgentId: domain.Profile{ID: agentId}, StartDate: startDate, EndDate: endDate, AdvertisementFrequency: frequency, Type: campaignType})
+		retVal = append(retVal, domain.MultipleCampaign{ID: id, Post: ads, AgentId: domain.Profile{ID: agentId}, StartDate: startDate, EndDate: endDate, AdvertisementFrequency: frequency, Type: domain.Type(campaignType)})
 
 	}
 	return retVal, nil
@@ -72,7 +72,7 @@ func (c campaignRepository) GetAllDisposableCampaignsForAgenyt(ctx context.Conte
 		for _, a := range adIds {
 			ads = append(ads, domain.AdPost{ID: a})
 		}
-		retVal = append(retVal, domain.DisposableCampaign{ID: id, Post: ads, AgentId: domain.Profile{ID: agentId}, ExposureDate: exposureDate, Type: campaignType})
+		retVal = append(retVal, domain.DisposableCampaign{ID: id, Post: ads, AgentId: domain.Profile{ID: agentId}, ExposureDate: exposureDate, Type: domain.Type(campaignType)})
 
 	}
 	return retVal, nil
