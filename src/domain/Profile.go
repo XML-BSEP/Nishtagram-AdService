@@ -1,6 +1,6 @@
 package domain
 
 type Profile struct {
-	ID string
+	ID string `json:"profileId"`
 	TaggedCommentID string
 }

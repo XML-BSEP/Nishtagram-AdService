@@ -3,6 +3,7 @@ package repository
 import (
 	"ad_service/domain"
 	"context"
+	"fmt"
 	"github.com/gocql/gocql"
 	"github.com/google/uuid"
 	"time"
@@ -18,6 +19,8 @@ const (
 	UpdateMultipleCampaign = "UPDATE adpost_keyspace.MultipleCampaigns SET start_date = ?, end_date = ?, frequency = ? WHERE id = ? AND agent_id = ?;"
 	DeleteMultipleCampaign = "DELETE FROM adpost_keyspace.MultipleCampaigns WHERE id = ? AND agent_id = ?;"
 	DeleteDisposableCampaign = "DELETE FROM adpost_keyspace.DisposableCampaigns WHERE id = ? AND agent_id = ?;"
+	GetDisposableCampaign = "SELECT id, exposure_date, status, timestamp, ad_id, type FROM adpost_keyspace.DisposableCampaigns WHERE agent_id = ? AND id = ?;"
+	GetMultipleCampaign = "SELECT id, start_date, end_date, frequency, status, timestamp, ad_id, type FROM adpost_keyspace.MultipleCampaigns WHERE agent_id AND id = ?;"
 )
 
 type CampaignRepo interface {
@@ -28,10 +31,47 @@ type CampaignRepo interface {
 	UpdateMultipleCampaign(ctx context.Context, campaign domain.MultipleCampaign) error
 	DeleteMultipleCampaign(ctx context.Context, campaign domain.MultipleCampaign) error
 	DeleteDisposableCampaign(ctx context.Context, campaign domain.DisposableCampaign) error
+	GetDisposableCampaign(ctx context.Context, campaignId string, userId string) (domain.DisposableCampaign, error)
+	GetMultipleCampaign(ctx context.Context, campaignId string, userId string) (domain.MultipleCampaign, error)
 }
 
 type campaignRepository struct {
 	cassandraClient *gocql.Session
+}
+
+func (c campaignRepository) GetDisposableCampaign(ctx context.Context, campaignId string, userId string) (domain.DisposableCampaign, error) {
+	var id string
+	var exposureDate, timestamp time.Time
+	var status, campaignType int
+	var adIds []string
+	var ads []domain.AdPost
+
+	err := c.cassandraClient.Query(GetDisposableCampaign, userId, campaignId).Iter().Scan(&id, &exposureDate, &status, &timestamp, &adIds, &campaignType)
+	if !err {
+		return domain.DisposableCampaign{}, fmt.Errorf("no such campaign")
+	}
+	for _, a := range adIds {
+		ads = append(ads, domain.AdPost{ID: a})
+	}
+	return domain.DisposableCampaign{ID: id, Post: ads, AgentId: domain.Profile{ID: userId}, ExposureDate: exposureDate, Type: domain.Type(campaignType)}, nil
+
+}
+
+func (c campaignRepository) GetMultipleCampaign(ctx context.Context, campaignId string, userId string) (domain.MultipleCampaign, error) {
+	var id string
+	var startDate, endDate, timestamp time.Time
+	var status, campaignType, frequency int
+	var adIds []string
+
+	err := c.cassandraClient.Query(GetMultipleCampaign, userId, campaignId).Iter().Scan(&id, &startDate, &endDate, &frequency, &status, &timestamp, &adIds, &campaignType)
+	if !err {
+		return domain.MultipleCampaign{}, fmt.Errorf("no such campaign")
+	}
+	var ads []domain.AdPost
+	for _, a := range adIds {
+		ads = append(ads, domain.AdPost{ID: a})
+	}
+	return domain.MultipleCampaign{ID: id, Post: ads, AgentId: domain.Profile{ID: userId}, StartDate: startDate, EndDate: endDate, AdvertisementFrequency: frequency, Type: domain.Type(campaignType)}, nil
 }
 
 func (c campaignRepository) GetAllMultipleCampaignsForAgent(ctx context.Context, agentId string) ([]domain.MultipleCampaign, error) {

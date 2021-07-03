@@ -9,25 +9,39 @@ import (
 type appHandler struct {
 	handler.AdHandler
 	handler.CampaignHandler
+	handler.CampaignRequestHandler
 }
 type Interactor interface {
 	NewAdPostRepo() repository.AdPostRepo
 	NewCampaignRepo() repository.CampaignRepo
+	NewCampaignRequestRepo() repository.CampaignRequestRepo
 
 
 	NewAdPostUseCase() usecase.AdPostUseCase
 	NewCampaignUseCase() usecase.CampaignUseCase
+	NewCampaignRequestUseCase() usecase.CampaignRequestUseCase
 
 	NewAdPostHandler() handler.AdHandler
 	NewCampaignHandler() handler.CampaignHandler
+	NewCampaignRequestHandler() handler.CampaignRequestHandler
 
 	NewAppHandler() handler.AppHandler
-
-
 }
 
 type interctor struct {
 	cassandraClient *gocql.Session
+}
+
+func (i interctor) NewCampaignRequestRepo() repository.CampaignRequestRepo {
+	return repository.NewCampaignRequestRepository(i.cassandraClient)
+}
+
+func (i interctor) NewCampaignRequestUseCase() usecase.CampaignRequestUseCase {
+	return usecase.NewCampaignRequestUseCase(i.NewCampaignRequestRepo(), i.NewCampaignUseCase())
+}
+
+func (i interctor) NewCampaignRequestHandler() handler.CampaignRequestHandler {
+	return handler.NewCampaignRequestHandler(i.NewCampaignRequestRepo())
 }
 
 func (i interctor) NewAdPostRepo() repository.AdPostRepo {
@@ -58,6 +72,8 @@ func (i interctor) NewAppHandler() handler.AppHandler {
 	appHandler := &appHandler{}
 	appHandler.AdHandler = i.NewAdPostHandler()
 	appHandler.CampaignHandler = i.NewCampaignHandler()
+	appHandler.CampaignRequestHandler = i.NewCampaignRequestHandler()
+
 	return appHandler
 }
 
