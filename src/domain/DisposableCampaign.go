@@ -4,11 +4,6 @@ import "time"
 
 type Status int
 
-const (
-	ACCEPTED Status = iota
-	REJECTED
-	CREATED
-)
 type Type int
 
 const (

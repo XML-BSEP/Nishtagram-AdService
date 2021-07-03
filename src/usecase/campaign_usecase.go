@@ -14,11 +14,53 @@ type CampaignUseCase interface {
 	UpdateMultipleCampaign(ctx context.Context, campaign domain.MultipleCampaign) error
 	DeleteMultipleCampaign(ctx context.Context, campaign domain.MultipleCampaign) error
 	DeleteDisposableCampaign(ctx context.Context, campaign domain.DisposableCampaign) error
+	GetDisposableCampaign(ctx context.Context, campaignId string, agentId string) (domain.DisposableCampaign, error)
+	GetMultipleCampaign(ctx context.Context, campaignId string, agentId string) (domain.MultipleCampaign, error)
 }
 
 type campaignUseCase struct {
 	campaignRepository repository.CampaignRepo
 	adUseCase AdPostUseCase
+}
+
+func (c campaignUseCase) GetDisposableCampaign(ctx context.Context, campaignId string, agentId string) (domain.DisposableCampaign, error) {
+	campaign, err := c.campaignRepository.GetDisposableCampaign(ctx, campaignId, agentId)
+	if err != nil {
+		return domain.DisposableCampaign{}, err
+	}
+	var adPosts []domain.AdPost
+	for _, ad := range campaign.Post {
+		encodedAd, err := c.adUseCase.GetAdById(ctx, agentId, ad.ID)
+		if err != nil {
+			continue
+		}
+		adPosts = append(adPosts, encodedAd)
+	}
+
+		campaign.Post = adPosts
+
+
+	return campaign, nil
+}
+
+func (c campaignUseCase) GetMultipleCampaign(ctx context.Context, campaignId string, agentId string) (domain.MultipleCampaign, error) {
+	campaign, err := c.campaignRepository.GetMultipleCampaign(ctx, campaignId, agentId)
+	if err != nil {
+		return domain.MultipleCampaign{}, err
+	}
+	var adPosts []domain.AdPost
+	for _, ad := range campaign.Post {
+		encodedAd, err := c.adUseCase.GetAdById(ctx, agentId, ad.ID)
+		if err != nil {
+			continue
+		}
+		adPosts = append(adPosts, encodedAd)
+	}
+
+	campaign.Post = adPosts
+
+
+	return campaign, nil
 }
 
 func (c campaignUseCase) GetAllDisposableCampaignsForAgent(ctx context.Context, agentId string) ([]domain.DisposableCampaign, error) {

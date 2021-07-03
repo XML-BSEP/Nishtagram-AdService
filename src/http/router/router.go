@@ -22,6 +22,14 @@ func NewRouter(handler handler.AppHandler) *gin.Engine {
 	g.POST("updateMultipleCampaign", handler.UpdateMultipleCampaign)
 	g.POST("deleteMultipleCampaign", handler.DeleteMultipleCampaign)
 	g.POST("deleteDisposableCampaign", handler.DeleteDisposableCampaign)
+	g.POST("createDisposableCampaignRequest", handler.CreateDisposableCampaignRequest)
+	g.POST("createMultipleCampaignRequest", handler.CreateMultipleCampaignRequest)
+	g.POST("approveDisposableCampaignRequest", handler.ApproveDisposableCampaignRequest)
+	g.POST("approveMultipleCampaignRequest", handler.ApproveMultipleCampaignRequest)
+	g.POST("rejectDisposableCampaignRequest", handler.RejectDisposableCampaignRequest)
+	g.POST("rejectMultipleCampaignRequest", handler.RejectMultipleCampaignRequest)
+	g.POST("getAllDisposableCampaignRequests", handler.GetAllDisposableCampaignRequests)
+	g.POST("getAllMultipleCampaignRequests", handler.GetAllMultipleCampaignRequests)
 	return router
 
 }
