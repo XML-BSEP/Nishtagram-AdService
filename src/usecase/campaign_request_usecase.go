@@ -58,6 +58,10 @@ func (c campaignRequestUseCase) CreateMultipleCampaignRequest(ctx context.Contex
 }
 
 func (c campaignRequestUseCase) ApproveDisposableCampaignRequest(ctx context.Context, request domain.DisposableCampaignRequest) error {
+	campaign, err := c.campaignUseCase.GetDisposableCampaign(ctx, request.DisposableCampaign.ID, request.AgentId)
+	if err != nil {
+		return err
+	}
 	isInfluencer, _ := gateway.CheckIsUserIsInfluencer(ctx, request.InfluencerId)
 	if !isInfluencer.IsInfluencer {
 		return fmt.Errorf("not an influencer")
@@ -70,10 +74,66 @@ func (c campaignRequestUseCase) ApproveDisposableCampaignRequest(ctx context.Con
 		}
 	}
 
-	return c.campaignRequestRepo.ApproveDisposableCampaignRequest(ctx, request)
+	err = c.campaignRequestRepo.ApproveDisposableCampaignRequest(ctx, request)
+	if err != nil {
+		return err
+	}
+	if campaign.Type == 1 {
+
+		for _, ad := range campaign.Post {
+			createPostDto := dto.CreatePostDTO{}
+			if ad.Type == 0 {
+				createPostDto.IsImage = true
+				createPostDto.IsVideo = false
+				createPostDto.IsAlbum = false
+			} else {
+				createPostDto.IsImage = false
+				createPostDto.IsVideo = true
+				createPostDto.IsAlbum = false
+			}
+			var media []string
+			media = append(media, ad.Path)
+			createPostDto.Media = media
+			createPostDto.Caption = ad.Description + " " + ad.Link
+			createPostDto.Location = ad.Location
+			createPostDto.Hashtags = ad.HashTags
+			createPostDto.UserId = dto.UserTag{UserId: request.InfluencerId}
+			err := gateway.AddPostFromCampaign(ctx, createPostDto)
+			if err != nil {
+				return err
+			}
+
+		}
+	} else {
+		for _, ad := range campaign.Post {
+			createStory := dto.StoryDTO{}
+			if ad.Type == 0 {
+				createStory.IsVideo = false
+				createStory.Type = "PHOTO"
+			} else {
+				createStory.IsVideo = true
+				createStory.Type = "VIDEO"
+			}
+			createStory.UserId = request.InfluencerId
+			createStory.Story = ad.Path
+			createStory.Location = domain.Location{Location: ad.Location}
+			createStory.CloseFriends = false
+
+			err := gateway.AddStoryFromCampaign(ctx, createStory)
+			if err != nil {
+				return err
+			}
+		}
+
+	}
+	return nil
 }
 
 func (c campaignRequestUseCase) ApproveMultipleCampaignRequest(ctx context.Context, request domain.MultipleCampaignRequest) error {
+	campaign, err := c.campaignUseCase.GetMultipleCampaign(ctx, request.MultipleCampaign.ID, request.AgentId)
+	if err != nil {
+		return err
+	}
 	isInfluencer, _ := gateway.CheckIsUserIsInfluencer(ctx, request.InfluencerId)
 	if !isInfluencer.IsInfluencer {
 		return fmt.Errorf("not an influencer")
@@ -86,7 +146,59 @@ func (c campaignRequestUseCase) ApproveMultipleCampaignRequest(ctx context.Conte
 		}
 	}
 
-	return c.campaignRequestRepo.ApproveMultipleCampaignRequest(ctx, request)
+	err = c.campaignRequestRepo.ApproveMultipleCampaignRequest(ctx, request)
+	if err != nil {
+		return err
+	}
+	if campaign.Type == 1 {
+		for _, ad := range campaign.Post {
+			createPostDto := dto.CreatePostDTO{}
+			if ad.Type == 0 {
+				createPostDto.IsImage = true
+				createPostDto.IsVideo = false
+				createPostDto.IsAlbum = false
+			} else {
+				createPostDto.IsImage = false
+				createPostDto.IsVideo = true
+				createPostDto.IsAlbum = false
+			}
+			var media []string
+			media = append(media, ad.Path)
+			createPostDto.Media = media
+			createPostDto.Caption = ad.Description + " " + ad.Link
+			createPostDto.Location = ad.Location
+			createPostDto.Hashtags = ad.HashTags
+			createPostDto.UserId = dto.UserTag{UserId: request.InfluencerId}
+			err := gateway.AddPostFromCampaign(ctx, createPostDto)
+			if err != nil {
+				return err
+			}
+
+		}
+	} else {
+		for _, ad := range campaign.Post {
+			createStory := dto.StoryDTO{}
+			if ad.Type == 0 {
+				createStory.IsVideo = false
+				createStory.Type = "PHOTO"
+			} else {
+				createStory.IsVideo = true
+				createStory.Type = "VIDEO"
+			}
+			createStory.UserId = request.InfluencerId
+			createStory.Story = ad.Path
+			createStory.Location = domain.Location{Location: ad.Location}
+			createStory.CloseFriends = false
+
+			err := gateway.AddStoryFromCampaign(ctx, createStory)
+			if err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
+
 }
 
 func (c campaignRequestUseCase) RejectDisposableCampaignRequest(ctx context.Context, request domain.DisposableCampaignRequest) error {
