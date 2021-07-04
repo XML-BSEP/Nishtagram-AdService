@@ -19,7 +19,7 @@ func AddPostFromCampaign(ctx context.Context, createPost dto.CreatePostDTO) erro
 		resp, _ := client.R().
 			SetBody(createPost).
 			EnableTrace().
-			Post("https://" + userDomain + ":8083/createPostFromCampaign")
+			Post("https://" + userDomain + ":8083/post/createPostFromCampaign")
 
 		if resp.StatusCode() != 200 {
 			return fmt.Errorf("error")
@@ -30,7 +30,7 @@ func AddPostFromCampaign(ctx context.Context, createPost dto.CreatePostDTO) erro
 		resp, _ := client.R().
 			SetBody(createPost).
 			EnableTrace().
-			Post("https://" + userDomain + ":8083/createPostFromCampaign")
+			Post("https://" + userDomain + ":8083/post/createPostFromCampaign")
 
 		if resp.StatusCode() != 200 {
 			return fmt.Errorf("error")

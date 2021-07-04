@@ -19,7 +19,7 @@ func AddStoryFromCampaign(ctx context.Context, createPost dto.StoryDTO) error {
 		resp, _ := client.R().
 			SetBody(createPost).
 			EnableTrace().
-			Post("https://" + userDomain + ":8084/createStoryFromCampaign")
+			Post("https://" + userDomain + ":8084/story/createStoryFromCampaign")
 
 
 		if resp.StatusCode() != 200 {
@@ -31,7 +31,7 @@ func AddStoryFromCampaign(ctx context.Context, createPost dto.StoryDTO) error {
 		resp, _ := client.R().
 			SetBody(createPost).
 			EnableTrace().
-			Post("https://" + userDomain + ":8084/createStoryFromCampaign")
+			Post("https://" + userDomain + ":8084/story/createStoryFromCampaign")
 
 
 		if resp.StatusCode() != 200 {

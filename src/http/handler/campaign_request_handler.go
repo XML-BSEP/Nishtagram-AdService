@@ -82,7 +82,7 @@ func (c campaignRequestHandler) ApproveDisposableCampaignRequest(ctx *gin.Contex
 		return
 	}
 
-	campaign.AgentId, _ = middleware.ExtractUserId(ctx.Request)
+	//campaign.AgentId, _ = middleware.ExtractUserId(ctx.Request)
 
 	err := c.campaignRequestUseCase.ApproveDisposableCampaignRequest(ctx, campaign)
 
@@ -106,7 +106,7 @@ func (c campaignRequestHandler) ApproveMultipleCampaignRequest(ctx *gin.Context)
 		return
 	}
 
-	campaign.AgentId, _ = middleware.ExtractUserId(ctx.Request)
+	//campaign.AgentId, _ = middleware.ExtractUserId(ctx.Request)
 
 	err := c.campaignRequestUseCase.ApproveMultipleCampaignRequest(ctx, campaign)
 
@@ -130,7 +130,7 @@ func (c campaignRequestHandler) RejectDisposableCampaignRequest(ctx *gin.Context
 		return
 	}
 
-	campaign.AgentId, _ = middleware.ExtractUserId(ctx.Request)
+	//campaign.AgentId, _ = middleware.ExtractUserId(ctx.Request)
 
 	err := c.campaignRequestUseCase.RejectDisposableCampaignRequest(ctx, campaign)
 
@@ -154,7 +154,7 @@ func (c campaignRequestHandler) RejectMultipleCampaignRequest(ctx *gin.Context) 
 		return
 	}
 
-	campaign.AgentId, _ = middleware.ExtractUserId(ctx.Request)
+//	campaign.AgentId, _ = middleware.ExtractUserId(ctx.Request)
 
 	err := c.campaignRequestUseCase.RejectMultipleCampaignRequest(ctx, campaign)
 
