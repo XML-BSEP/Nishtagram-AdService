@@ -103,8 +103,9 @@ func (c campaignRepository) GetAllDisposableCampaignsForAgenyt(ctx context.Conte
 	var status, campaignType int
 	var adIds []string
 	var retVal []domain.DisposableCampaign
-	var ads []domain.AdPost
+
 	for iter.Next() {
+		var ads []domain.AdPost
 		err := iter.Scan(&id, &exposureDate, &status, &timestamp, &adIds, &campaignType)
 		if err != nil {
 			continue
