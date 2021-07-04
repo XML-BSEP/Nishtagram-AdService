@@ -128,7 +128,7 @@ func (c campaignRequestUseCase) GetAllDisposableCampaignRequests(ctx context.Con
 	}
 	var retVal []domain.DisposableCampaignRequest
 	for _, r := range requests {
-		campaign, err := c.campaignUseCase.GetDisposableCampaign(ctx, r.DisposableCampaign.ID, userId)
+		campaign, err := c.campaignUseCase.GetDisposableCampaign(ctx, r.DisposableCampaign.ID, r.AgentId)
 		if err != nil {
 			continue
 		}
@@ -145,7 +145,7 @@ func (c campaignRequestUseCase) GetAllMultipleCampaignRequests(ctx context.Conte
 	}
 	var retVal []domain.MultipleCampaignRequest
 	for _, r := range requests {
-		campaign, err := c.campaignUseCase.GetMultipleCampaign(ctx, r.MultipleCampaign.ID, userId)
+		campaign, err := c.campaignUseCase.GetMultipleCampaign(ctx, r.MultipleCampaign.ID, r.AgentId)
 		if err != nil {
 			continue
 		}

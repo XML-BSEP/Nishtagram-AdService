@@ -20,7 +20,7 @@ const (
 	DeleteMultipleCampaign = "DELETE FROM adpost_keyspace.MultipleCampaigns WHERE id = ? AND agent_id = ?;"
 	DeleteDisposableCampaign = "DELETE FROM adpost_keyspace.DisposableCampaigns WHERE id = ? AND agent_id = ?;"
 	GetDisposableCampaign = "SELECT id, exposure_date, status, timestamp, ad_id, type FROM adpost_keyspace.DisposableCampaigns WHERE agent_id = ? AND id = ?;"
-	GetMultipleCampaign = "SELECT id, start_date, end_date, frequency, status, timestamp, ad_id, type FROM adpost_keyspace.MultipleCampaigns WHERE agent_id AND id = ?;"
+	GetMultipleCampaign = "SELECT id, start_date, end_date, frequency, status, timestamp, ad_id, type FROM adpost_keyspace.MultipleCampaigns WHERE agent_id = ? AND id = ?;"
 )
 
 type CampaignRepo interface {
