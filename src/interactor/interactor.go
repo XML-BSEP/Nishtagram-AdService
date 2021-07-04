@@ -41,7 +41,7 @@ func (i interctor) NewCampaignRequestUseCase() usecase.CampaignRequestUseCase {
 }
 
 func (i interctor) NewCampaignRequestHandler() handler.CampaignRequestHandler {
-	return handler.NewCampaignRequestHandler(i.NewCampaignRequestRepo())
+	return handler.NewCampaignRequestHandler(i.NewCampaignRequestUseCase())
 }
 
 func (i interctor) NewAdPostRepo() repository.AdPostRepo {
