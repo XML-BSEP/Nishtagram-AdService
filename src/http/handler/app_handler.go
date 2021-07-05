@@ -4,4 +4,5 @@ type AppHandler interface {
 	AdHandler
 	CampaignHandler
 	CampaignRequestHandler
+	AdvertiseHandler
 }
