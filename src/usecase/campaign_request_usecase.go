@@ -74,26 +74,24 @@ func (c campaignRequestUseCase) ApproveDisposableCampaignRequest(ctx context.Con
 		}
 	}
 
-	err = c.campaignRequestRepo.ApproveDisposableCampaignRequest(ctx, request)
-	if err != nil {
-		return err
-	}
+	c.campaignRequestRepo.ApproveDisposableCampaignRequest(ctx, request)
+
 	if campaign.Type == 1 {
 
 		for _, ad := range campaign.Post {
 			createPostDto := dto.CreatePostDTO{}
 			if ad.Type == 0 {
+				createPostDto.Image = ad.Path
 				createPostDto.IsImage = true
 				createPostDto.IsVideo = false
 				createPostDto.IsAlbum = false
 			} else {
+				createPostDto.Video = ad.Path
 				createPostDto.IsImage = false
 				createPostDto.IsVideo = true
 				createPostDto.IsAlbum = false
 			}
-			var media []string
-			media = append(media, ad.Path)
-			createPostDto.Media = media
+
 			createPostDto.Caption = ad.Description + " " + ad.Link
 			createPostDto.Location = ad.Location
 			createPostDto.Hashtags = ad.HashTags
@@ -154,17 +152,17 @@ func (c campaignRequestUseCase) ApproveMultipleCampaignRequest(ctx context.Conte
 		for _, ad := range campaign.Post {
 			createPostDto := dto.CreatePostDTO{}
 			if ad.Type == 0 {
+				createPostDto.Image = ad.Path
 				createPostDto.IsImage = true
 				createPostDto.IsVideo = false
 				createPostDto.IsAlbum = false
 			} else {
+				createPostDto.Video = ad.Path
 				createPostDto.IsImage = false
 				createPostDto.IsVideo = true
 				createPostDto.IsAlbum = false
 			}
-			var media []string
-			media = append(media, ad.Path)
-			createPostDto.Media = media
+
 			createPostDto.Caption = ad.Description + " " + ad.Link
 			createPostDto.Location = ad.Location
 			createPostDto.Hashtags = ad.HashTags

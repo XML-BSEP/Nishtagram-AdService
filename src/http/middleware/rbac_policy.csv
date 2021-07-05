@@ -8,10 +8,10 @@ p, AGENT, /ad/updateMultipleCampaign, *
 p, AGENT, /ad/deleteMultipleCampaign, *
 p, AGENT, /ad/createDisposableCampaignRequest, *
 p, AGENT, /ad/createMultipleCampaignRequest, *
-p, AGENT, /ad/approveDisposableCampaignRequest, *
-p, AGENT, /ad/approveMultipleCampaignRequest, *
-p, AGENT, /ad/rejectDisposableCampaignRequest, *
-p, AGENT, /ad/rejectMultipleCampaignRequest, *
+p, USER, /ad/approveDisposableCampaignRequest, *
+p, USER, /ad/approveMultipleCampaignRequest, *
+p, USER, /ad/rejectDisposableCampaignRequest, *
+p, USER, /ad/rejectMultipleCampaignRequest, *
 p, USER, /ad/getAllDisposableCampaignRequests, *
 p, USER, /ad/getAllMultipleCampaignRequests, *
 p, USER, /ad/getAllPostAds, *
