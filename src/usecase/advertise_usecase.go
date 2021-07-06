@@ -18,6 +18,7 @@ type AdvertiseUseCase interface {
 type advertiseUseCase struct {
 	adPostUseCase AdPostUseCase
 	advertiseRepository repository.AdvertisementRepo
+	likeRepository repository.LikeRepo
 }
 
 func checkIfElementExists(list []string, element string) bool {
@@ -127,6 +128,13 @@ func (a advertiseUseCase) GetAllPostAdsForUser(ctx context.Context, profileId st
 		adToAdd.Timestamp = oneAd.Timestamp
 		adToAdd.PostBy = oneAd.AgentId.ID
 		adToAdd.Id = oneAd.ID
+		if a.likeRepository.SeeIfLikeExists(oneAd.ID, profileId, context.Background()) {
+			adToAdd.IsLiked = true
+		}
+
+		if  a.likeRepository.SeeIfDislikeExists(oneAd.ID, profileId, context.Background()) {
+			adToAdd.IsDisliked = true
+		}
 
 		retVal = append(retVal, adToAdd)
 	}
@@ -152,6 +160,6 @@ func (a advertiseUseCase) GetAllStoryAdsForUser(ctx context.Context, profileId s
 	return retVal, nil
 }
 
-func NewAdvertiseUseCase(adPostUseCase AdPostUseCase, advertiseRepository repository.AdvertisementRepo) AdvertiseUseCase {
-	return &advertiseUseCase{adPostUseCase: adPostUseCase, advertiseRepository: advertiseRepository}
+func NewAdvertiseUseCase(adPostUseCase AdPostUseCase, advertiseRepository repository.AdvertisementRepo, likeRepo repository.LikeRepo) AdvertiseUseCase {
+	return &advertiseUseCase{adPostUseCase: adPostUseCase, advertiseRepository: advertiseRepository, likeRepository: likeRepo}
 }

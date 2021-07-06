@@ -11,12 +11,12 @@ import (
 
 const (
 	CreateAdPostRepo = "CREATE TABLE IF NOT EXISTS adpost_keyspace.AdPosts (id text, agent_id text, media text, description text, " +
-		"timestamp timestamp, link text, hashtags list<text>, location text, type int, num_of_likes int, num_of_dislikes int, PRIMARY KEY(agent_id, id));"
-	InsertIntoAdPostRepo = "INSERT INTO adpost_keyspace.AdPosts (id, agent_id, media, description, timestamp, link, hashtags, location, type, num_of_likes, num_of_dislikes) " +
-		"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) IF NOT EXISTS;"
+		"timestamp timestamp, link text, hashtags list<text>, location text, type int, num_of_likes int, num_of_dislikes int, num_of_comments int, PRIMARY KEY(agent_id, id));"
+	InsertIntoAdPostRepo = "INSERT INTO adpost_keyspace.AdPosts (id, agent_id, media, description, timestamp, link, hashtags, location, type, num_of_likes, num_of_dislikes, num_of_comments) " +
+		"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) IF NOT EXISTS;"
 	DeleteFromAdPostRepo = "DELETE FROM adpost_keyspace.AdPosts WHERE id = ? AND agent_id = ?;"
-	GetAdsByAgent = "SELECT id, agent_id, media, description, timestamp, link, hashtags, location, type, num_of_likes, num_of_dislikes FROM adpost_keyspace.AdPosts WHERE agent_id = ?;"
-	GetAdsByAgentAndId = "SELECT id, agent_id, media, description, timestamp, link, hashtags, location, type, num_of_likes, num_of_dislikes FROM adpost_keyspace.AdPosts WHERE agent_id = ? AND id = ?;"
+	GetAdsByAgent = "SELECT id, agent_id, media, description, timestamp, link, hashtags, location, type, num_of_likes, num_of_dislikes, num_of_comments FROM adpost_keyspace.AdPosts WHERE agent_id = ?;"
+	GetAdsByAgentAndId = "SELECT id, agent_id, media, description, timestamp, link, hashtags, location, type, num_of_likes, num_of_dislikes, num_of_comments FROM adpost_keyspace.AdPosts WHERE agent_id = ? AND id = ?;"
 
 	)
 type AdPostRepo interface {
@@ -33,23 +33,23 @@ type adPostRepository struct {
 
 func (a adPostRepository) GetAdByAgentIdAndId(ctx context.Context, agent string, adId string) (domain.AdPost, error) {
 	var id, agentId, media, description, link, location string
-	var adType, numOfLikes, numOfDislikes int
+	var adType, numOfLikes, numOfDislikes, numOfCOmments int
 	var hashtags []string
 	var timestamp time2.Time
 
-	iter := a.cassandraClient.Query(GetAdsByAgentAndId, agent, adId).Iter().Scan(&id, &agentId, &media, &description, &timestamp, &link, &hashtags, &location, &adType, &numOfLikes, &numOfDislikes)
+	iter := a.cassandraClient.Query(GetAdsByAgentAndId, agent, adId).Iter().Scan(&id, &agentId, &media, &description, &timestamp, &link, &hashtags, &location, &adType, &numOfLikes, &numOfDislikes, &numOfCOmments)
 	if !iter {
 		return domain.AdPost{}, fmt.Errorf("error while unmarshaling ad")
 	}
 
-	return domain.AdPost{ID: id, AgentId: domain.Profile{ID: agentId}, Description: description, Timestamp: timestamp, HashTags: hashtags, Location: location,
+	return domain.AdPost{ID: id, AgentId: domain.Profile{ID: agentId}, Description: description, Timestamp: timestamp, HashTags: hashtags, Location: location, NumOfComments: numOfCOmments,
 		NumOfLikes: numOfLikes, NumOfDislikes: numOfDislikes, Link: link, Path: media}, nil
 
 }
 
 func (a adPostRepository) GetAdsByAgent(ctx context.Context, agent string) ([]domain.AdPost, error) {
 	var id, agentId, media, description, link, location string
-	var adType, numOfLikes, numOfDislikes int
+	var adType, numOfLikes, numOfDislikes, numOfComments int
 	var hashtags []string
 	var timestamp time2.Time
 
@@ -57,12 +57,12 @@ func (a adPostRepository) GetAdsByAgent(ctx context.Context, agent string) ([]do
 	iter := a.cassandraClient.Query(GetAdsByAgent, agent).Iter().Scanner()
 
 	for iter.Next() {
-		err := iter.Scan(&id, &agentId, &media, &description, &timestamp, &link, &hashtags, &location, &adType, &numOfLikes, &numOfDislikes)
+		err := iter.Scan(&id, &agentId, &media, &description, &timestamp, &link, &hashtags, &location, &adType, &numOfLikes, &numOfDislikes, &numOfComments)
 		if err != nil {
 			continue
 		}
 
-		retVal = append(retVal, domain.AdPost{ID: id, AgentId: domain.Profile{ID: agentId}, Description: description, Timestamp: timestamp, HashTags: hashtags, Location: location,
+		retVal = append(retVal, domain.AdPost{ID: id, AgentId: domain.Profile{ID: agentId}, Description: description, Timestamp: timestamp, HashTags: hashtags, Location: location, NumOfComments: numOfComments,
 			NumOfLikes: numOfLikes, NumOfDislikes: numOfDislikes, Link: link, Path: media})
 
 	}
@@ -73,7 +73,7 @@ func (a adPostRepository) GetAdsByAgent(ctx context.Context, agent string) ([]do
 func (a adPostRepository) CreateAd(ctx context.Context, ad domain.AdPost) error {
 	id := uuid.NewString()
 	time := time2.Now()
-	err := a.cassandraClient.Query(InsertIntoAdPostRepo, id, ad.AgentId.ID, ad.Path, ad.Description, time, ad.Link, ad.HashTags, ad.Location, ad.Type, 0, 0).Exec()
+	err := a.cassandraClient.Query(InsertIntoAdPostRepo, id, ad.AgentId.ID, ad.Path, ad.Description, time, ad.Link, ad.HashTags, ad.Location, ad.Type, 0, 0, 0).Exec()
 
 	if err != nil {
 		return err

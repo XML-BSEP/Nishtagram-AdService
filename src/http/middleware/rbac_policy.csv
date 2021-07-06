@@ -19,3 +19,18 @@ p, USER, /ad/getAllStoryAds, *
 p, AGENT, /ad/getAllPostAds, *
 p, AGENT, /ad/getAllStoryAds, *
 p, AGENT, /ad/generateApiToken, *
+p, USER, /ad/like, *
+p, AGENT, /ad/like, *
+p, USER, /ad/dislike, *
+p, AGENT, /ad/dislike, *
+p, USER, /ad/removeLike, *
+p, AGENT, /ad/removeLike, *
+p, USER, /ad/removeDislike, *
+p, AGENT, /ad/removeDislike, *
+p, USER, /ad/comment, *
+p, AGENT, /ad/comment, *
+p, USER, /ad/removeComment, *
+p, AGENT, /ad/removeComment, *
+p, USER, /ad/getAllComments, *
+p, AGENT, /ad/getAllComments, *
+

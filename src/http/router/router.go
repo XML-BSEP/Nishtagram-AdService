@@ -33,6 +33,14 @@ func NewRouter(handler handler.AppHandler) *gin.Engine {
 	g.GET("getAllPostAds", handler.GetAllPostAdsForUser)
 	g.GET("getAllStoryAds", handler.GetAllStoryAdsForUser)
 	g.GET("generateApiToken", handler.GenerateAPIToken)
+	g.POST("like", handler.LikePost)
+	g.POST("dislike", handler.DislikePost)
+	g.POST("removeLike", handler.RemoveLike)
+	g.POST("removeDislike", handler.RemoveDislike)
+	g.POST("comment", handler.AddComment)
+	g.POST("removeComment", handler.DeleteComment)
+	g.POST("getAllComments", handler.GetComments)
+
 	return router
 
 }
