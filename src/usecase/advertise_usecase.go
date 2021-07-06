@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"ad_service/domain"
+	"ad_service/dto"
 	"ad_service/gateway"
 	"ad_service/repository"
 	"context"
@@ -10,7 +11,7 @@ import (
 type AdvertiseUseCase interface {
 	AddDisposableCampaignToAdvertisementTable(ctx context.Context, disposableCampaign domain.DisposableCampaign) error
 	AddMultipleCampaignToAdvertisementTable(ctx context.Context, multipleCampaign domain.MultipleCampaign) error
-	GetAllPostAdsForUser(ctx context.Context, profileId string) ([]domain.AdPost, error)
+	GetAllPostAdsForUser(ctx context.Context, profileId string) ([]dto.ShowAdPost, error)
 	GetAllStoryAdsForUser(ctx context.Context, profileId string) ([]domain.AdPost, error)
 }
 
@@ -32,14 +33,14 @@ func (a advertiseUseCase) AddDisposableCampaignToAdvertisementTable(ctx context.
 	var profileIds []string
 	for _, ad := range disposableCampaign.Post {
 		profileIdsLocation, err := gateway.GetProfilesByLocation(ctx, ad.Location)
-		if err != nil {
-			continue
-		}
-		for _, id := range profileIdsLocation {
-			if !checkIfElementExists(profileIds, id) {
-				profileIds = append(profileIds, id)
+		if err == nil {
+			for _, id := range profileIdsLocation {
+				if !checkIfElementExists(profileIds, id) {
+					profileIds = append(profileIds, id)
+				}
 			}
 		}
+
 
 		for _, hashtag := range ad.HashTags {
 			profileIdsHash, err := gateway.GetProfilesByHashtag(ctx, hashtag)
@@ -56,7 +57,7 @@ func (a advertiseUseCase) AddDisposableCampaignToAdvertisementTable(ctx context.
 
 
 	}
-	return a.advertiseRepository.AddDisposableCampaignToAdvertisementTable(ctx, disposableCampaign, profileIds)
+	return a.advertiseRepository.AddDisposableCampaignToAdvertisementTable(context.Background(), disposableCampaign, profileIds)
 }
 
 func (a advertiseUseCase) AddMultipleCampaignToAdvertisementTable(ctx context.Context, multipleCampaign domain.MultipleCampaign) error {
@@ -87,12 +88,12 @@ func (a advertiseUseCase) AddMultipleCampaignToAdvertisementTable(ctx context.Co
 
 
 	}
-	return a.advertiseRepository.AddMultipleCampaignToAdvertisementTable(ctx, multipleCampaign, profileIds)
+	return a.advertiseRepository.AddMultipleCampaignToAdvertisementTable(multipleCampaign, profileIds)
 }
 
-func (a advertiseUseCase) GetAllPostAdsForUser(ctx context.Context, profileId string) ([]domain.AdPost, error) {
-	var retVal []domain.AdPost
-	adsToShow, err := a.GetAllPostAdsForUser(ctx, profileId)
+func (a advertiseUseCase) GetAllPostAdsForUser(ctx context.Context, profileId string) ([]dto.ShowAdPost, error) {
+	var retVal []dto.ShowAdPost
+	adsToShow, err := a.advertiseRepository.GetAllPostAdsForUser(context.Background(), profileId)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +103,32 @@ func (a advertiseUseCase) GetAllPostAdsForUser(ctx context.Context, profileId st
 		if err != nil {
 			continue
 		}
-		retVal = append(retVal, oneAd)
+		adToAdd := dto.ShowAdPost{}
+		if oneAd.Type == 0 {
+			adToAdd.IsVideo = false
+			adToAdd.IsAlbum = false
+		} else {
+
+			adToAdd.IsVideo = true
+			adToAdd.IsAlbum = false
+		}
+		adToAdd.Location = oneAd.Location
+		user, _ := gateway.GetUser(context.Background(), oneAd.AgentId.ID)
+		adToAdd.User = domain.Profile{ProfileId : oneAd.AgentId.ID, ProfilePhoto: user.ProfilePhoto, Username: user.Username}
+		media := make([]string, 1)
+		media[0] = oneAd.Path
+		adToAdd.Media = media
+		adToAdd.NumOfComments = oneAd.NumOfComments
+		adToAdd.NumOfLikes = oneAd.NumOfLikes
+		adToAdd.NumOfDislikes = oneAd.NumOfDislikes
+		adToAdd.Link = oneAd.Link
+		adToAdd.Description = oneAd.Description
+		adToAdd.IsCampaign = true
+		adToAdd.Timestamp = oneAd.Timestamp
+		adToAdd.PostBy = oneAd.AgentId.ID
+		adToAdd.Id = oneAd.ID
+
+		retVal = append(retVal, adToAdd)
 	}
 
 	return retVal, nil
@@ -110,7 +136,7 @@ func (a advertiseUseCase) GetAllPostAdsForUser(ctx context.Context, profileId st
 
 func (a advertiseUseCase) GetAllStoryAdsForUser(ctx context.Context, profileId string) ([]domain.AdPost, error) {
 	var retVal []domain.AdPost
-	adsToShow, err := a.GetAllStoryAdsForUser(ctx, profileId)
+	adsToShow, err := a.advertiseRepository.GetAllStoryAdsForUser(ctx, profileId)
 	if err != nil {
 		return nil, err
 	}

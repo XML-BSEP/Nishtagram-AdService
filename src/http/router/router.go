@@ -32,6 +32,7 @@ func NewRouter(handler handler.AppHandler) *gin.Engine {
 	g.GET("getAllMultipleCampaignRequests", handler.GetAllMultipleCampaignRequests)
 	g.GET("getAllPostAds", handler.GetAllPostAdsForUser)
 	g.GET("getAllStoryAds", handler.GetAllStoryAdsForUser)
+	g.GET("generateApiToken", handler.GenerateAPIToken)
 	return router
 
 }

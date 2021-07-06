@@ -9,14 +9,14 @@ import (
 )
 
 const (
-	CreateAdvertisementTable = "CREATE TABLE IF NOT EXIST apdpost_keyspace.AdvertisementTable (profile_id text, ad_id text, agent_id text, advertisement_time timestamp, type text, seen bool, PRIMARY KEY (profile_id, advertisement_time, type));"
+	CreateAdvertisementTable = "CREATE TABLE IF NOT EXISTS adpost_keyspace.AdvertisementTable (profile_id text, ad_id text, agent_id text, advertisement_time timestamp, type text, seen boolean, PRIMARY KEY ((profile_id), advertisement_time))  WITH CLUSTERING ORDER BY (advertisement_time DESC);;"
 	InsertIntoAdvertisementTable = "INSERT INTO adpost_keyspace.AdvertisementTable (profile_id, ad_id, agent_id, advertisement_time, type, seen) VALUES (?, ?, ?, ?, ?, ?) IF NOT EXISTS;"
-	SelectAllAdsForAdvertisement = "SELECT ad_id, agent_id, advertisement_time FROM adpost_keyspace.AdvertisementTable WHERE profile_id = ? AND advertisement_time >= ? AND advertisement_time <= ? AND type = ?;"
+	SelectAllAdsForAdvertisement = "SELECT ad_id, agent_id, advertisement_time FROM adpost_keyspace.AdvertisementTable WHERE profile_id = ? AND advertisement_time >= ? AND advertisement_time <= ?;"
 )
 
 type AdvertisementRepo interface {
 	AddDisposableCampaignToAdvertisementTable(ctx context.Context, disposableCampaign domain.DisposableCampaign, userIds []string) error
-	AddMultipleCampaignToAdvertisementTable(ctx context.Context, multipleCampaign domain.MultipleCampaign, userIds []string) error
+	AddMultipleCampaignToAdvertisementTable(multipleCampaign domain.MultipleCampaign, userIds []string) error
 	GetAllPostAdsForUser(ctx context.Context, profileId string) ([]domain.AdPost, error)
 	GetAllStoryAdsForUser(ctx context.Context, profileId string) ([]domain.AdPost, error)
 }
@@ -29,9 +29,15 @@ func (a advertisementRepository) AddDisposableCampaignToAdvertisementTable(ctx c
 	for _, userId := range userIds {
 		for _, ad := range disposableCampaign.Post {
 			if disposableCampaign.Type == 0 {
-				a.cassandraClient.Query(InsertIntoAdvertisementTable, userId, ad.ID, disposableCampaign.AgentId, disposableCampaign.ExposureDate, "STORY", false)
+				err := a.cassandraClient.Query(InsertIntoAdvertisementTable, userId, ad.ID, disposableCampaign.AgentId.ID, disposableCampaign.ExposureDate, "STORY", false).Exec()
+				if err != nil {
+					continue
+				}
 			} else {
-				a.cassandraClient.Query(InsertIntoAdvertisementTable, userId, ad.ID, disposableCampaign.AgentId, disposableCampaign.ExposureDate, "POST", false)
+				err := a.cassandraClient.Query(InsertIntoAdvertisementTable, userId, ad.ID, disposableCampaign.AgentId.ID, disposableCampaign.ExposureDate, "POST", false).Exec()
+				if err != nil {
+					continue
+				}
 			}
 		}
 	}
@@ -39,7 +45,7 @@ func (a advertisementRepository) AddDisposableCampaignToAdvertisementTable(ctx c
 }
 
 
-func (a advertisementRepository) AddMultipleCampaignToAdvertisementTable(ctx context.Context, multipleCampaign domain.MultipleCampaign, userIds []string) error {
+func (a advertisementRepository) AddMultipleCampaignToAdvertisementTable(multipleCampaign domain.MultipleCampaign, userIds []string) error {
 	var exposureDates []time.Time
 	startTime :=  time.Date(multipleCampaign.StartDate.Year(), multipleCampaign.StartDate.Month(), multipleCampaign.StartDate.Day(), 8, 0, 0, multipleCampaign.StartDate.Nanosecond(), multipleCampaign.StartDate.Location())
 	endTime :=  time.Date(multipleCampaign.EndDate.Year(), multipleCampaign.EndDate.Month(), multipleCampaign.EndDate.Day(), 0, 0, 0, multipleCampaign.StartDate.Nanosecond(), multipleCampaign.StartDate.Location())
@@ -50,9 +56,10 @@ func (a advertisementRepository) AddMultipleCampaignToAdvertisementTable(ctx con
 
 	hoursToAdd := 16 / multipleCampaign.AdvertisementFrequency
 
-	for i := startTime; i.After(endTime) == false; i.AddDate(0, 0, 1) {
-		for hour := 0; hour <= hoursToAdd; hour += 1 {
-			exposureDates = append(exposureDates, i.Add(time.Hour * time.Duration(hour)))
+	for i := startTime; i.After(endTime) == false; i = i.Add(time.Hour*24) {
+		for hour := 0; hour <= 16; hour += hoursToAdd {
+			date := i
+			exposureDates = append(exposureDates, date.Add(time.Hour * time.Duration(hour)))
 		}
 	}
 
@@ -60,9 +67,15 @@ func (a advertisementRepository) AddMultipleCampaignToAdvertisementTable(ctx con
 		for _, ad := range multipleCampaign.Post {
 			for _, date := range exposureDates {
 				if multipleCampaign.Type == 0 {
-					a.cassandraClient.Query(InsertIntoAdvertisementTable, userId, ad.ID, multipleCampaign.AgentId, date, "STORY", false)
+					err :=a.cassandraClient.Query(InsertIntoAdvertisementTable, userId, ad.ID, multipleCampaign.AgentId.ID, date, "STORY", false).Exec()
+					if err != nil {
+						continue
+					}
 				} else {
-					a.cassandraClient.Query(InsertIntoAdvertisementTable, userId, ad.ID, multipleCampaign.AgentId, date, "POST", false)
+					err := a.cassandraClient.Query(InsertIntoAdvertisementTable, userId, ad.ID, multipleCampaign.AgentId.ID, date, "POST", false).Exec()
+					if err != nil {
+						continue
+					}
 				}
 			}
 
@@ -74,11 +87,22 @@ func (a advertisementRepository) AddMultipleCampaignToAdvertisementTable(ctx con
 func (a advertisementRepository) GetAllPostAdsForUser(ctx context.Context, profileId string) ([]domain.AdPost, error) {
 	var adId, agentId string
 	var advertisementTime time.Time
-	timeToCompare := time.Now()
-	iter := a.cassandraClient.Query(SelectAllAdsForAdvertisement, profileId, timeToCompare.Add(-time.Minute * 15), timeToCompare.Add(time.Minute * 15), "POST").Iter().Scanner()
+	timeString := time.Now().Format("02-01-2006 15:04:05")
+	timeToCompare, _ := time.Parse("02-01-2006 15:04:05", timeString)
+	fmt.Println(timeToCompare.Add(-time.Minute * 15).String())
+	fmt.Println(timeToCompare.Add(time.Minute * 15).String())
+	minTime := timeToCompare.Add(-time.Minute * 15)
+	maxTime := timeToCompare.Add(time.Minute * 15)
+	iter := a.cassandraClient.Query(SelectAllAdsForAdvertisement, profileId, minTime, maxTime).Iter().Scanner()
 	var retVal []domain.AdPost
 	for iter.Next() {
 		err := iter.Scan(&adId, &agentId, &advertisementTime)
+	/*	if advertisementTime.Before(minTime) {
+		continue
+		}
+		if advertisementTime.After(maxTime) {
+			continue
+		}*/
 		if err != nil {
 			continue
 		}
@@ -91,8 +115,13 @@ func (a advertisementRepository) GetAllPostAdsForUser(ctx context.Context, profi
 func (a advertisementRepository) GetAllStoryAdsForUser(ctx context.Context, profileId string) ([]domain.AdPost, error) {
 	var adId, agentId string
 	var advertisementTime time.Time
-	timeToCompare := time.Now()
-	iter := a.cassandraClient.Query(SelectAllAdsForAdvertisement, profileId, timeToCompare.Add(-time.Minute * 15), timeToCompare.Add(time.Minute * 15), "STORY").Iter().Scanner()
+	timeString := time.Now().Format("02-01-2006 15:04:05")
+	timeToCompare, _ := time.Parse("02-01-2006 15:04:05", timeString)
+	fmt.Println(timeToCompare.Add(-time.Minute * 15).String())
+	fmt.Println(timeToCompare.Add(time.Minute * 15).String())
+	minTime := timeToCompare.Add(-time.Minute * 15)
+	maxTime := timeToCompare.Add(time.Minute * 15)
+	iter := a.cassandraClient.Query(SelectAllAdsForAdvertisement, profileId, minTime, maxTime, "STORY").Iter().Scanner()
 	var retVal []domain.AdPost
 	for iter.Next() {
 		err := iter.Scan(&adId, &agentId, &advertisementTime)

@@ -6,6 +6,10 @@ import (
 	"ad_service/gateway"
 	"ad_service/repository"
 	"context"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
+	"os"
+	"time"
 )
 
 type CampaignUseCase interface {
@@ -18,12 +22,37 @@ type CampaignUseCase interface {
 	DeleteDisposableCampaign(ctx context.Context, campaign domain.DisposableCampaign) error
 	GetDisposableCampaign(ctx context.Context, campaignId string, agentId string) (domain.DisposableCampaign, error)
 	GetMultipleCampaign(ctx context.Context, campaignId string, agentId string) (domain.MultipleCampaign, error)
+	CreateApiToken(ctx context.Context, userId string) (string, error)
+	SeeIfTokenExists(ctx context.Context, token string) (string, error)
 }
 
 type campaignUseCase struct {
 	campaignRepository repository.CampaignRepo
 	adUseCase AdPostUseCase
 	advertiseUseCase AdvertiseUseCase
+}
+
+func (c campaignUseCase) CreateApiToken(ctx context.Context, userId string) (string, error) {
+	atClaims := jwt.MapClaims{}
+	atClaims["authorized"] = true
+	atClaims["access_uuid"] = uuid.NewString()
+	atClaims["refresh_uuid"] = uuid.NewString()
+	atClaims["role"] = "AGENT"
+	atClaims["user_id"] = userId
+	atClaims["exp"] = time.Now().Add(time.Second * 3600).Unix()
+
+
+	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
+	token, err := at.SignedString([]byte(os.Getenv("ACCESS_SECRET")))
+	err = c.campaignRepository.InsertIntoTokenTable(context.Background(), token, userId)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
+func (c campaignUseCase) SeeIfTokenExists(ctx context.Context, token string) (string, error) {
+	return c.campaignRepository.GetUserIdByToken(context.Background(), token)
 }
 
 func (c campaignUseCase) GetDisposableCampaign(ctx context.Context, campaignId string, agentId string) (domain.DisposableCampaign, error) {
@@ -144,9 +173,7 @@ func (c campaignUseCase) CreateDisposableCampaign(ctx context.Context, campaign 
 				createPostDto.IsVideo = true
 				createPostDto.IsAlbum = false
 			}
-			var media []string
-			media = append(media, ad.Path)
-			createPostDto.Media = media
+
 			createPostDto.Caption = ad.Description + " " + ad.Link
 			createPostDto.Location = ad.Location
 			createPostDto.Hashtags = ad.HashTags
@@ -179,7 +206,7 @@ func (c campaignUseCase) CreateDisposableCampaign(ctx context.Context, campaign 
 		}
 
 	}
-	err = c.advertiseUseCase.AddDisposableCampaignToAdvertisementTable(ctx, campaign)
+	err = c.advertiseUseCase.AddDisposableCampaignToAdvertisementTable(context.Background(), campaign)
 	if err != nil {
 		return err
 	}
@@ -196,17 +223,16 @@ func (c campaignUseCase) CreateMultipleCampaign(ctx context.Context, campaign do
 		for _, ad := range campaign.Post {
 			createPostDto := dto.CreatePostDTO{}
 			if ad.Type == 0 {
+				createPostDto.Image = ad.Path
 				createPostDto.IsImage = true
 				createPostDto.IsVideo = false
 				createPostDto.IsAlbum = false
 			} else {
+				createPostDto.Video = ad.Path
 				createPostDto.IsImage = false
 				createPostDto.IsVideo = true
 				createPostDto.IsAlbum = false
 			}
-			var media []string
-			media = append(media, ad.Path)
-			createPostDto.Media = media
 			createPostDto.Caption = ad.Description + " " + ad.Link
 			createPostDto.Location = ad.Location
 			createPostDto.Hashtags = ad.HashTags
@@ -239,7 +265,7 @@ func (c campaignUseCase) CreateMultipleCampaign(ctx context.Context, campaign do
 		}
 
 	}
-	err = c.advertiseUseCase.AddMultipleCampaignToAdvertisementTable(ctx, campaign)
+	err = c.advertiseUseCase.AddMultipleCampaignToAdvertisementTable(context.Background(), campaign)
 	if err != nil {
 		return err
 	}

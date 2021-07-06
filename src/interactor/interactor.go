@@ -10,26 +10,42 @@ type appHandler struct {
 	handler.AdHandler
 	handler.CampaignHandler
 	handler.CampaignRequestHandler
+	handler.AdvertiseHandler
 }
 type Interactor interface {
 	NewAdPostRepo() repository.AdPostRepo
 	NewCampaignRepo() repository.CampaignRepo
 	NewCampaignRequestRepo() repository.CampaignRequestRepo
+	NewAdvertisementRepo() repository.AdvertisementRepo
 
 
 	NewAdPostUseCase() usecase.AdPostUseCase
 	NewCampaignUseCase() usecase.CampaignUseCase
 	NewCampaignRequestUseCase() usecase.CampaignRequestUseCase
+	NewAdvertisementUseCase() usecase.AdvertiseUseCase
 
 	NewAdPostHandler() handler.AdHandler
 	NewCampaignHandler() handler.CampaignHandler
 	NewCampaignRequestHandler() handler.CampaignRequestHandler
+	NewAdvertisementHandler() handler.AdvertiseHandler
 
 	NewAppHandler() handler.AppHandler
 }
 
 type interctor struct {
 	cassandraClient *gocql.Session
+}
+
+func (i interctor) NewAdvertisementRepo() repository.AdvertisementRepo {
+	return repository.NewAdvertisementRepository(i.cassandraClient)
+}
+
+func (i interctor) NewAdvertisementUseCase() usecase.AdvertiseUseCase {
+	return usecase.NewAdvertiseUseCase(i.NewAdPostUseCase(), i.NewAdvertisementRepo())
+}
+
+func (i interctor) NewAdvertisementHandler() handler.AdvertiseHandler {
+	return handler.NewAdvertiseHandler(i.NewAdvertisementUseCase())
 }
 
 func (i interctor) NewCampaignRequestRepo() repository.CampaignRequestRepo {
@@ -57,7 +73,7 @@ func (i interctor) NewAdPostUseCase() usecase.AdPostUseCase {
 }
 
 func (i interctor) NewCampaignUseCase() usecase.CampaignUseCase {
-	return usecase.NewCampaignUseCase(i.NewCampaignRepo(), i.NewAdPostUseCase())
+	return usecase.NewCampaignUseCase(i.NewCampaignRepo(), i.NewAdPostUseCase(), i.NewAdvertisementUseCase())
 }
 
 func (i interctor) NewAdPostHandler() handler.AdHandler {
@@ -73,6 +89,7 @@ func (i interctor) NewAppHandler() handler.AppHandler {
 	appHandler.AdHandler = i.NewAdPostHandler()
 	appHandler.CampaignHandler = i.NewCampaignHandler()
 	appHandler.CampaignRequestHandler = i.NewCampaignRequestHandler()
+	appHandler.AdvertiseHandler = i.NewAdvertisementHandler()
 
 	return appHandler
 }
