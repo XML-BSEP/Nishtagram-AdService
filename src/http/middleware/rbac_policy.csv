@@ -14,3 +14,8 @@ p, USER, /ad/rejectDisposableCampaignRequest, *
 p, USER, /ad/rejectMultipleCampaignRequest, *
 p, USER, /ad/getAllDisposableCampaignRequests, *
 p, USER, /ad/getAllMultipleCampaignRequests, *
+p, USER, /ad/getAllPostAds, *
+p, USER, /ad/getAllStoryAds, *
+p, AGENT, /ad/getAllPostAds, *
+p, AGENT, /ad/getAllStoryAds, *
+p, AGENT, /ad/generateApiToken, *

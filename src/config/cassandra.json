@@ -6,7 +6,7 @@
     "domain_docker" : "cassandraad",
     "port_docker": 9042,
 
-    "port_localhost": 7002
+    "port_localhost": 7000
 
 
   },

@@ -12,6 +12,9 @@ import (
 const (
 	CreateDisposableCampaign = "CREATE TABLE IF NOT EXISTS adpost_keyspace.DisposableCampaigns (id text, agent_id text, exposure_date timestamp, status int, timestamp timestamp, ad_id list<text>, type int, PRIMARY KEY (agent_id, id));"
 	CreateMultipleCampaign = "CREATE TABLE IF NOT EXISTS adpost_keyspace.MultipleCampaigns (id text, agent_id text, start_date timestamp, end_date timestamp, frequency int, status int, timestamp timestamp, ad_id list<text>, type int, PRIMARY KEY (agent_id, id));"
+	CreateTokenTable = "CREATE TABLE IF NOT EXISTS adpost_keyspace.NishtagramApiTokens (user_token text, user_id text, PRIMARY KEY (user_token));"
+	InsertIntoTokenTable = "INSERT INTO adpost_keyspace.NishtagramApiTokens (user_token, user_id) VALUES (?, ?) IF NOT EXISTS;"
+	SelectUserId = "SELECT FROM adpost_keyspace.NishtagramApiTokens user_id WHERE user_token = ?;"
 	InsertIntoDisposableCampaign = "INSERT INTO adpost_keyspace.DisposableCampaigns (id, agent_id, exposure_date, status, timestamp, ad_id, type) VALUES (?, ?, ?, ?, ?, ?, ?) IF NOT EXISTS;"
 	InsertIntoMultipleCampaign = "INSERT INTO adpost_keyspace.MultipleCampaigns (id, agent_id, start_date, end_date, frequency, timestamp, ad_id, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?) IF NOT EXISTS;"
 	GetAllDisposableCampaigns = "SELECT id, exposure_date, status, timestamp, ad_id, type FROM adpost_keyspace.DisposableCampaigns WHERE agent_id = ?;"
@@ -33,10 +36,25 @@ type CampaignRepo interface {
 	DeleteDisposableCampaign(ctx context.Context, campaign domain.DisposableCampaign) error
 	GetDisposableCampaign(ctx context.Context, campaignId string, userId string) (domain.DisposableCampaign, error)
 	GetMultipleCampaign(ctx context.Context, campaignId string, userId string) (domain.MultipleCampaign, error)
+	InsertIntoTokenTable(ctx context.Context, token string, userId string) error
+	GetUserIdByToken(ctx context.Context, token string) (string, error)
 }
 
 type campaignRepository struct {
 	cassandraClient *gocql.Session
+}
+
+func (c campaignRepository) InsertIntoTokenTable(ctx context.Context, token string, userId string) error {
+	return c.cassandraClient.Query(InsertIntoTokenTable, token, userId).Exec()
+}
+
+func (c campaignRepository) GetUserIdByToken(ctx context.Context, token string) (string, error) {
+	var userId string
+	c.cassandraClient.Query(SelectUserId, token).Iter().Scan(&userId)
+	if userId == "" {
+		return userId, fmt.Errorf("no such token")
+	}
+	return userId, nil
 }
 
 func (c campaignRepository) GetDisposableCampaign(ctx context.Context, campaignId string, userId string) (domain.DisposableCampaign, error) {
@@ -167,6 +185,11 @@ func NewCampaignRepo(cassandraClient *gocql.Session) CampaignRepo {
 
 	err = cassandraClient.Query(CreateDisposableCampaign).Exec()
 
+	if err != nil {
+		return nil
+	}
+
+	err = cassandraClient.Query(CreateTokenTable).Exec()
 	if err != nil {
 		return nil
 	}

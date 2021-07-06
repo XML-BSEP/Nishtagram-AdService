@@ -38,7 +38,7 @@ func (c campaignRequestUseCase) CreateDisposableCampaignRequest(ctx context.Cont
 		}
 	}
 
-	return c.campaignRequestRepo.CreateDisposableCampaignRequest(ctx, request)
+	return c.campaignRequestRepo.CreateDisposableCampaignRequest(context.Background(), request)
 }
 
 func (c campaignRequestUseCase) CreateMultipleCampaignRequest(ctx context.Context, request domain.MultipleCampaignRequest) error {
@@ -54,7 +54,7 @@ func (c campaignRequestUseCase) CreateMultipleCampaignRequest(ctx context.Contex
 		}
 	}
 
-	return c.campaignRequestRepo.CreateMultipleCampaignRequest(ctx, request)
+	return c.campaignRequestRepo.CreateMultipleCampaignRequest(context.Background(), request)
 }
 
 func (c campaignRequestUseCase) ApproveDisposableCampaignRequest(ctx context.Context, request domain.DisposableCampaignRequest) error {
@@ -74,7 +74,7 @@ func (c campaignRequestUseCase) ApproveDisposableCampaignRequest(ctx context.Con
 		}
 	}
 
-	c.campaignRequestRepo.ApproveDisposableCampaignRequest(ctx, request)
+	c.campaignRequestRepo.ApproveDisposableCampaignRequest(context.Background(), request)
 
 	if campaign.Type == 1 {
 
@@ -117,7 +117,7 @@ func (c campaignRequestUseCase) ApproveDisposableCampaignRequest(ctx context.Con
 			createStory.Location = domain.Location{Location: ad.Location}
 			createStory.CloseFriends = false
 
-			err := gateway.AddStoryFromCampaign(ctx, createStory)
+			err := gateway.AddStoryFromCampaign(context.Background(), createStory)
 			if err != nil {
 				return err
 			}
@@ -128,11 +128,11 @@ func (c campaignRequestUseCase) ApproveDisposableCampaignRequest(ctx context.Con
 }
 
 func (c campaignRequestUseCase) ApproveMultipleCampaignRequest(ctx context.Context, request domain.MultipleCampaignRequest) error {
-	campaign, err := c.campaignUseCase.GetMultipleCampaign(ctx, request.MultipleCampaign.ID, request.AgentId)
+	campaign, err := c.campaignUseCase.GetMultipleCampaign(context.Background(), request.MultipleCampaign.ID, request.AgentId)
 	if err != nil {
 		return err
 	}
-	isInfluencer, _ := gateway.CheckIsUserIsInfluencer(ctx, request.InfluencerId)
+	isInfluencer, _ := gateway.CheckIsUserIsInfluencer(context.Background(), request.InfluencerId)
 	if !isInfluencer.IsInfluencer {
 		return fmt.Errorf("not an influencer")
 	}
@@ -144,7 +144,7 @@ func (c campaignRequestUseCase) ApproveMultipleCampaignRequest(ctx context.Conte
 		}
 	}
 
-	err = c.campaignRequestRepo.ApproveMultipleCampaignRequest(ctx, request)
+	err = c.campaignRequestRepo.ApproveMultipleCampaignRequest(context.Background(), request)
 	if err != nil {
 		return err
 	}
@@ -167,7 +167,7 @@ func (c campaignRequestUseCase) ApproveMultipleCampaignRequest(ctx context.Conte
 			createPostDto.Location = ad.Location
 			createPostDto.Hashtags = ad.HashTags
 			createPostDto.UserId = dto.UserTag{UserId: request.InfluencerId}
-			err := gateway.AddPostFromCampaign(ctx, createPostDto)
+			err := gateway.AddPostFromCampaign(context.Background(), createPostDto)
 			if err != nil {
 				return err
 			}
@@ -188,7 +188,7 @@ func (c campaignRequestUseCase) ApproveMultipleCampaignRequest(ctx context.Conte
 			createStory.Location = domain.Location{Location: ad.Location}
 			createStory.CloseFriends = false
 
-			err := gateway.AddStoryFromCampaign(ctx, createStory)
+			err := gateway.AddStoryFromCampaign(context.Background(), createStory)
 			if err != nil {
 				return err
 			}
@@ -200,7 +200,7 @@ func (c campaignRequestUseCase) ApproveMultipleCampaignRequest(ctx context.Conte
 }
 
 func (c campaignRequestUseCase) RejectDisposableCampaignRequest(ctx context.Context, request domain.DisposableCampaignRequest) error {
-	isInfluencer, _ := gateway.CheckIsUserIsInfluencer(ctx, request.InfluencerId)
+	isInfluencer, _ := gateway.CheckIsUserIsInfluencer(context.Background(), request.InfluencerId)
 	if !isInfluencer.IsInfluencer {
 		return fmt.Errorf("not an influencer")
 	}
@@ -212,23 +212,23 @@ func (c campaignRequestUseCase) RejectDisposableCampaignRequest(ctx context.Cont
 		}
 	}
 
-	return c.campaignRequestRepo.RejectDisposableCampaignRequest(ctx, request)
+	return c.campaignRequestRepo.RejectDisposableCampaignRequest(context.Background(), request)
 }
 
 func (c campaignRequestUseCase) RejectMultipleCampaignRequest(ctx context.Context, request domain.MultipleCampaignRequest) error {
-	isInfluencer, _ := gateway.CheckIsUserIsInfluencer(ctx, request.InfluencerId)
+	isInfluencer, _ := gateway.CheckIsUserIsInfluencer(context.Background(), request.InfluencerId)
 	if !isInfluencer.IsInfluencer {
 		return fmt.Errorf("not an influencer")
 	}
 	if isInfluencer.IsPrivate {
 		followDto := dto.FollowDTO{Follower: dto.ProfileDTO{ID: request.InfluencerId}, User: dto.ProfileDTO{ID: request.AgentId}}
-		followResponse, _ := gateway.SeeIfAgentFollows(ctx, followDto)
+		followResponse, _ := gateway.SeeIfAgentFollows(context.Background(), followDto)
 		if followResponse.Message == "Allowed to follow" || followResponse.Message == "Request already sent" {
 			return fmt.Errorf("user private and not following")
 		}
 	}
 
-	return c.campaignRequestRepo.RejectMultipleCampaignRequest(ctx, request)
+	return c.campaignRequestRepo.RejectMultipleCampaignRequest(context.Background(), request)
 }
 
 func (c campaignRequestUseCase) GetAllDisposableCampaignRequests(ctx context.Context, userId string) ([]domain.DisposableCampaignRequest, error) {
@@ -238,7 +238,7 @@ func (c campaignRequestUseCase) GetAllDisposableCampaignRequests(ctx context.Con
 	}
 	var retVal []domain.DisposableCampaignRequest
 	for _, r := range requests {
-		campaign, err := c.campaignUseCase.GetDisposableCampaign(ctx, r.DisposableCampaign.ID, r.AgentId)
+		campaign, err := c.campaignUseCase.GetDisposableCampaign(context.Background(), r.DisposableCampaign.ID, r.AgentId)
 		if err != nil {
 			continue
 		}
@@ -255,7 +255,7 @@ func (c campaignRequestUseCase) GetAllMultipleCampaignRequests(ctx context.Conte
 	}
 	var retVal []domain.MultipleCampaignRequest
 	for _, r := range requests {
-		campaign, err := c.campaignUseCase.GetMultipleCampaign(ctx, r.MultipleCampaign.ID, r.AgentId)
+		campaign, err := c.campaignUseCase.GetMultipleCampaign(context.Background(), r.MultipleCampaign.ID, r.AgentId)
 		if err != nil {
 			continue
 		}
