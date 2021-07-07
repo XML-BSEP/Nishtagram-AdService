@@ -6,6 +6,7 @@ import (
 	"ad_service/gateway"
 	"ad_service/repository"
 	"context"
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
 	"os"
@@ -24,12 +25,63 @@ type CampaignUseCase interface {
 	GetMultipleCampaign(ctx context.Context, campaignId string, agentId string) (domain.MultipleCampaign, error)
 	CreateApiToken(ctx context.Context, userId string) (string, error)
 	SeeIfTokenExists(ctx context.Context, token string) (string, error)
+	GenerateStatisticsReport(ctx context.Context, agentId string) ([]domain.StatisticsReport, error)
+
 }
 
 type campaignUseCase struct {
 	campaignRepository repository.CampaignRepo
 	adUseCase AdPostUseCase
 	advertiseUseCase AdvertiseUseCase
+}
+
+func (c campaignUseCase) GenerateStatisticsReport(ctx context.Context, agentId string) ([]domain.StatisticsReport, error) {
+	campaigns, err := c.GetAllMultipleCampaignsForAgent(context.Background(), agentId)
+	if err != nil {
+		fmt.Println(err)
+	}
+	var retVal []domain.StatisticsReport
+	for _,campaign := range campaigns {
+		report, err := c.advertiseUseCase.GenerateStatisticsReport(context.Background(), agentId, campaign.ID)
+		if err != nil {
+			continue
+		}
+		adFull, err := c.adUseCase.GetAdById(context.Background(), campaign.AgentId.ID, campaign.Post[0].ID)
+		report.Description = adFull.Description
+		var links []string
+		for i, _ := range campaign.Post {
+			adToGenerate, err := c.adUseCase.GetAdById(context.Background(), campaign.AgentId.ID, campaign.Post[i].ID)
+			if err != nil {
+				continue
+			}
+			links = append(links, adToGenerate.Link)
+		}
+		report.AdvertisedLinks = links
+		retVal = append(retVal, report)
+	}
+	campaignsD, err := c.campaignRepository.GetAllDisposableCampaignsForAgent(context.Background(), agentId)
+	if err != nil {
+		fmt.Println(err)
+	}
+	for _,campaign := range campaignsD {
+		report, err := c.advertiseUseCase.GenerateStatisticsReport(context.Background(), agentId, campaign.ID)
+		if err != nil {
+			continue
+		}
+		adFull, err := c.adUseCase.GetAdById(context.Background(), campaign.AgentId.ID, campaign.Post[0].ID)
+		report.Description = adFull.Description
+		var links []string
+		for i, _ := range campaign.Post {
+			adToGenerate, err := c.adUseCase.GetAdById(context.Background(), campaign.AgentId.ID, campaign.Post[i].ID)
+			if err != nil {
+				continue
+			}
+			links = append(links, adToGenerate.Link)
+		}
+		report.AdvertisedLinks = links
+		retVal = append(retVal, report)
+	}
+	return retVal, nil
 }
 
 func (c campaignUseCase) CreateApiToken(ctx context.Context, userId string) (string, error) {
@@ -154,6 +206,7 @@ func (c campaignUseCase) DeleteDisposableCampaign(ctx context.Context, campaign 
 }
 
 func (c campaignUseCase) CreateDisposableCampaign(ctx context.Context, campaign domain.DisposableCampaign) error {
+	campaign.ID = uuid.NewString()
 	err := c.campaignRepository.CreateDisposableCampaign(ctx, campaign)
 	if err != nil {
 		return err
@@ -177,6 +230,8 @@ func (c campaignUseCase) CreateDisposableCampaign(ctx context.Context, campaign 
 			createPostDto.Caption = ad.Description + " " + ad.Link
 			createPostDto.Location = ad.Location
 			createPostDto.Hashtags = ad.HashTags
+			createPostDto.CampaignId = campaign.ID
+			createPostDto.Link = ad.Link
 			createPostDto.UserId = dto.UserTag{UserId: campaign.AgentId.ID}
 			err := gateway.AddPostFromCampaign(ctx, createPostDto)
 			if err != nil {
@@ -196,6 +251,8 @@ func (c campaignUseCase) CreateDisposableCampaign(ctx context.Context, campaign 
 			}
 			createStory.UserId = campaign.AgentId.ID
 			createStory.Story = ad.Path
+			createStory.CampaignId = campaign.ID
+			createStory.Link = ad.Link
 			createStory.Location = domain.Location{Location: ad.Location}
 			createStory.CloseFriends = false
 
@@ -214,6 +271,7 @@ func (c campaignUseCase) CreateDisposableCampaign(ctx context.Context, campaign 
 }
 
 func (c campaignUseCase) CreateMultipleCampaign(ctx context.Context, campaign domain.MultipleCampaign) error {
+	campaign.ID = uuid.NewString()
 	err := c.campaignRepository.CreateMultipleCampaign(ctx, campaign)
 	if err != nil {
 		return err

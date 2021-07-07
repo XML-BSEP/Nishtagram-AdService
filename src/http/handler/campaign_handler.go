@@ -17,10 +17,24 @@ type CampaignHandler interface {
 	DeleteMultipleCampaign(ctx *gin.Context)
 	DeleteDisposableCampaign(ctx *gin.Context)
 	GenerateAPIToken(ctx *gin.Context)
+	GenerateStatisticsReport(ctx *gin.Context)
 }
 
 type campaignHandler struct {
 	campaignUseCase usecase.CampaignUseCase
+}
+
+func (c campaignHandler) GenerateStatisticsReport(ctx *gin.Context) {
+	agentId, _ := middleware.ExtractUserId(ctx.Request)
+
+	report, err := c.campaignUseCase.GenerateStatisticsReport(ctx, agentId)
+	if err != nil {
+		ctx.JSON(500, gin.H{"message" : "server error"})
+		ctx.Abort()
+		return
+	}
+
+	ctx.JSON(200, report)
 }
 
 func (c campaignHandler) GenerateAPIToken(ctx *gin.Context) {

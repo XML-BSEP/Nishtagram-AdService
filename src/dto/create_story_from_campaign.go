@@ -26,6 +26,9 @@ type StoryDTO struct {
 	IsVideo bool `json:"isVideo" validate:"required"`
 	Story string `json:"story"`
 	NotFollowing bool `json:"notFollowing"`
+	CampaignId string `json:"campaignId"`
+	Link string `json:"link"`
+	StoryContent StoryContent `json:"storyContent"`
 
 
 }

@@ -40,6 +40,8 @@ func NewRouter(handler handler.AppHandler) *gin.Engine {
 	g.POST("comment", handler.AddComment)
 	g.POST("removeComment", handler.DeleteComment)
 	g.POST("getAllComments", handler.GetComments)
+	g.POST("addEvent", handler.AddClickEvent)
+	g.GET("generateStatisticReport", handler.GenerateStatisticsReport)
 
 	return router
 

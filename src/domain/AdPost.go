@@ -22,4 +22,5 @@ type AdPost struct {
 	Link string `json:"link"`
 	HashTags []string `json:"hashtags"`
 	Location string `json:"location"`
+	CampaignId string `json:"campaignId"`
 }

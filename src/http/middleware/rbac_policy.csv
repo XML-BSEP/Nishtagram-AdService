@@ -33,4 +33,7 @@ p, USER, /ad/removeComment, *
 p, AGENT, /ad/removeComment, *
 p, USER, /ad/getAllComments, *
 p, AGENT, /ad/getAllComments, *
+p, USER, /ad/addEvent, *
+p, AGENT, /ad/addEvent, *
+p, AGENT, /ad/generateStatisticReport, *
 

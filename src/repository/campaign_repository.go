@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/gocql/gocql"
-	"github.com/google/uuid"
 	"time"
 )
 
@@ -182,13 +181,12 @@ func (c campaignRepository) DeleteDisposableCampaign(ctx context.Context, campai
 }
 
 func (c campaignRepository) CreateDisposableCampaign(ctx context.Context, campaign domain.DisposableCampaign) error {
-	id := uuid.NewString()
 	timestamp := time.Now()
 	var adIds []string
 	for _, ad := range campaign.Post {
 		adIds = append(adIds, ad.ID)
 	}
-	err := c.cassandraClient.Query(InsertIntoDisposableCampaign, id, campaign.AgentId.ID, campaign.ExposureDate, campaign.Status, timestamp, adIds, campaign.Type).Exec()
+	err := c.cassandraClient.Query(InsertIntoDisposableCampaign, campaign.ID, campaign.AgentId.ID, campaign.ExposureDate, campaign.Status, timestamp, adIds, campaign.Type).Exec()
 	if err != nil {
 		return err
 	}
@@ -196,13 +194,13 @@ func (c campaignRepository) CreateDisposableCampaign(ctx context.Context, campai
 }
 
 func (c campaignRepository) CreateMultipleCampaign(ctx context.Context, campaign domain.MultipleCampaign) error {
-	id := uuid.NewString()
+
 	timestamp := time.Now()
 	var adIds []string
 	for _, ad := range campaign.Post {
 		adIds = append(adIds, ad.ID)
 	}
-	err := c.cassandraClient.Query(InsertIntoMultipleCampaign, id, campaign.AgentId.ID, campaign.StartDate, campaign.EndDate, campaign.AdvertisementFrequency, timestamp, adIds, campaign.Type).Exec()
+	err := c.cassandraClient.Query(InsertIntoMultipleCampaign, campaign.ID, campaign.AgentId.ID, campaign.StartDate, campaign.EndDate, campaign.AdvertisementFrequency, timestamp, adIds, campaign.Type).Exec()
 	if err != nil {
 		return err
 	}

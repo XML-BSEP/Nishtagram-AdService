@@ -15,6 +15,8 @@ type CreatePostDTO struct {
 	MediaType string
 	Video string `json:"video"`
 	MentionsToAdd []string
+	CampaignId string `json:"campaignId"`
+	Link string `json:"link"`
 
 }
 
