@@ -24,13 +24,18 @@ const (
 	DeleteDisposableCampaign = "DELETE FROM adpost_keyspace.DisposableCampaigns WHERE id = ? AND agent_id = ?;"
 	GetDisposableCampaign = "SELECT id, exposure_date, status, timestamp, ad_id, type FROM adpost_keyspace.DisposableCampaigns WHERE agent_id = ? AND id = ?;"
 	GetMultipleCampaign = "SELECT id, start_date, end_date, frequency, status, timestamp, ad_id, type FROM adpost_keyspace.MultipleCampaigns WHERE agent_id = ? AND id = ?;"
-)
+	CreatePendingEditCampaign = "CREATE TABLE IF NOT EXISTS adpost_keyspace.PendingEditCampaign (campaign_id text, start_date timestamp, end_date timestamp, frequency int, timestamp timestamp, PRIMARY KEY(campaign_id));"
+	InsertIntoPendingEditCampaign = "INSERT INTO adpost_keyspace.PendingEditCampaign (campaign_id, start_date, end_date, frequency, timestamp) VALUES (?, ?, ?, ?, ?);"
+	SeeIfPendingEditExists = "SELECT count(*) FROM adpost_keyspace.PendingEditCampaign WHERE campaign_id = ?;"
+	DeletePendingEdit = "DELETE FROM adpost_keyspace.PendingEditCampaign WHERE campaign_id = ?;"
+	GetNewChanges = "SELECT start_date, end_date, frequency, timestamp FROM adpost_keyspace.PendingEditCampaign WHERE campaign_id = ?;"
+	)
 
 type CampaignRepo interface {
 	CreateDisposableCampaign(ctx context.Context, campaign domain.DisposableCampaign) error
 	CreateMultipleCampaign(ctx context.Context, campaign domain.MultipleCampaign) error
 	GetAllMultipleCampaignsForAgent(ctx context.Context, agentId string) ([]domain.MultipleCampaign, error)
-	GetAllDisposableCampaignsForAgenyt(ctx context.Context, agentId string) ([]domain.DisposableCampaign, error)
+	GetAllDisposableCampaignsForAgent(ctx context.Context, agentId string) ([]domain.DisposableCampaign, error)
 	UpdateMultipleCampaign(ctx context.Context, campaign domain.MultipleCampaign) error
 	DeleteMultipleCampaign(ctx context.Context, campaign domain.MultipleCampaign) error
 	DeleteDisposableCampaign(ctx context.Context, campaign domain.DisposableCampaign) error
@@ -99,10 +104,28 @@ func (c campaignRepository) GetAllMultipleCampaignsForAgent(ctx context.Context,
 	var status, campaignType, frequency int
 	var adIds []string
 	var retVal []domain.MultipleCampaign
+	timeString := time.Now().Format("02-01-2006 15:04:05")
+	timeToCompare, _ := time.Parse("02-01-2006 15:04:05", timeString)
 	for iter.Next() {
 		err := iter.Scan(&id, &startDate, &endDate, &frequency, &status, &timestamp, &adIds, &campaignType)
 		if err != nil {
 			continue
+		}
+		var count int
+		_ = c.cassandraClient.Query(SeeIfPendingEditExists, id).Iter().Scan(&count)
+		if count > 0 {
+			var newStartDate, newEndDate, timeOfChange time.Time
+			var freq int
+			c.cassandraClient.Query(GetNewChanges, id).Iter().Scan(&newStartDate, &newEndDate, &freq, &timeOfChange)
+			isDayAfter := timeOfChange.Add(time.Hour*24)
+			if isDayAfter.Before(timeToCompare) {
+				c.cassandraClient.Query(UpdateMultipleCampaign, newStartDate, newEndDate, freq, id, agentId)
+				startDate = newStartDate
+				endDate = newEndDate
+				frequency = freq
+				err := c.cassandraClient.Query(DeletePendingEdit, id).Exec()
+				fmt.Println(err)
+			}
 		}
 		var ads []domain.AdPost
 		for _, a := range adIds {
@@ -114,7 +137,7 @@ func (c campaignRepository) GetAllMultipleCampaignsForAgent(ctx context.Context,
 	return retVal, nil
 }
 
-func (c campaignRepository) GetAllDisposableCampaignsForAgenyt(ctx context.Context, agentId string) ([]domain.DisposableCampaign, error) {
+func (c campaignRepository) GetAllDisposableCampaignsForAgent(ctx context.Context, agentId string) ([]domain.DisposableCampaign, error) {
 	iter := c.cassandraClient.Query(GetAllDisposableCampaigns, agentId).Iter().Scanner()
 	var id string
 	var exposureDate, timestamp time.Time
@@ -128,6 +151,7 @@ func (c campaignRepository) GetAllDisposableCampaignsForAgenyt(ctx context.Conte
 		if err != nil {
 			continue
 		}
+
 		for _, a := range adIds {
 			ads = append(ads, domain.AdPost{ID: a})
 		}
@@ -138,10 +162,18 @@ func (c campaignRepository) GetAllDisposableCampaignsForAgenyt(ctx context.Conte
 }
 
 func (c campaignRepository) UpdateMultipleCampaign(ctx context.Context, campaign domain.MultipleCampaign) error {
-	return c.cassandraClient.Query(UpdateMultipleCampaign, campaign.StartDate, campaign.EndDate, campaign.AdvertisementFrequency, campaign.ID, campaign.AgentId.ID ).Exec()
+	var count int
+	_ = c.cassandraClient.Query(SeeIfPendingEditExists, campaign.ID).Iter().Scan(&count)
+	if count > 0 {
+		err := c.cassandraClient.Query(DeletePendingEdit, campaign.ID).Exec()
+		fmt.Println(err)
+	}
+
+	return c.cassandraClient.Query(InsertIntoPendingEditCampaign, campaign.ID, campaign.StartDate, campaign.EndDate, campaign.AdvertisementFrequency, time.Now()).Exec()
 }
 
 func (c campaignRepository) DeleteMultipleCampaign(ctx context.Context, campaign domain.MultipleCampaign) error {
+
 	return c.cassandraClient.Query(DeleteMultipleCampaign, campaign.ID, campaign.AgentId.ID).Exec()
 }
 
@@ -182,7 +214,10 @@ func NewCampaignRepo(cassandraClient *gocql.Session) CampaignRepo {
 	if err != nil {
 		return nil
 	}
-
+	err = cassandraClient.Query(CreatePendingEditCampaign).Exec()
+	if err != nil {
+		return nil
+	}
 	err = cassandraClient.Query(CreateDisposableCampaign).Exec()
 
 	if err != nil {

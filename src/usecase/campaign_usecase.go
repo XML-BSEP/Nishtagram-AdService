@@ -96,7 +96,7 @@ func (c campaignUseCase) GetMultipleCampaign(ctx context.Context, campaignId str
 }
 
 func (c campaignUseCase) GetAllDisposableCampaignsForAgent(ctx context.Context, agentId string) ([]domain.DisposableCampaign, error) {
-	disposableCampaigns, err := c.campaignRepository.GetAllDisposableCampaignsForAgenyt(ctx, agentId)
+	disposableCampaigns, err := c.campaignRepository.GetAllDisposableCampaignsForAgent(ctx, agentId)
 	if err != nil {
 		return nil, err
 	}

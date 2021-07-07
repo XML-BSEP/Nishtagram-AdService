@@ -108,12 +108,12 @@ func (a adPostUseCase) CreateAdPost(ctx context.Context, post domain.AdPost) err
 	}
 
 	post.Path = encoded
-	return a.adPostRepository.CreateAd(ctx, post)
+	return a.adPostRepository.CreateAd(context.Background(), post)
 }
 
 func (a adPostUseCase) GetAdsByAgent(ctx context.Context, agentId string) ([]domain.AdPost, error) {
 
-	ads, err := a.adPostRepository.GetAdsByAgent(ctx, agentId)
+	ads, err := a.adPostRepository.GetAdsByAgent(context.Background(), agentId)
 
 	if err != nil {
 		return nil, err
