@@ -41,7 +41,9 @@ func (c campaignUseCase) GenerateStatisticsReport(ctx context.Context, agentId s
 		fmt.Println(err)
 	}
 	var retVal []domain.StatisticsReport
+	var likes, dislikes, comments int
 	for _,campaign := range campaigns {
+		likes, dislikes, comments = 0, 0, 0
 		report, err := c.advertiseUseCase.GenerateStatisticsReport(context.Background(), agentId, campaign.ID)
 		if err != nil {
 			continue
@@ -49,13 +51,19 @@ func (c campaignUseCase) GenerateStatisticsReport(ctx context.Context, agentId s
 		adFull, err := c.adUseCase.GetAdById(context.Background(), campaign.AgentId.ID, campaign.Post[0].ID)
 		report.Description = adFull.Description
 		var links []string
-		for i, _ := range campaign.Post {
+		for i, oneAd := range campaign.Post {
+			likes += oneAd.NumOfLikes
+			dislikes += oneAd.NumOfDislikes
+			comments += oneAd.NumOfComments
 			adToGenerate, err := c.adUseCase.GetAdById(context.Background(), campaign.AgentId.ID, campaign.Post[i].ID)
 			if err != nil {
 				continue
 			}
 			links = append(links, adToGenerate.Link)
 		}
+		report.NumOfComments = comments
+		report.NumOfDislikes = dislikes
+		report.NumOfLikes = likes
 		report.AdvertisedLinks = links
 		retVal = append(retVal, report)
 	}
@@ -64,6 +72,8 @@ func (c campaignUseCase) GenerateStatisticsReport(ctx context.Context, agentId s
 		fmt.Println(err)
 	}
 	for _,campaign := range campaignsD {
+		likes, dislikes, comments = 0, 0, 0
+
 		report, err := c.advertiseUseCase.GenerateStatisticsReport(context.Background(), agentId, campaign.ID)
 		if err != nil {
 			continue
@@ -71,13 +81,20 @@ func (c campaignUseCase) GenerateStatisticsReport(ctx context.Context, agentId s
 		adFull, err := c.adUseCase.GetAdById(context.Background(), campaign.AgentId.ID, campaign.Post[0].ID)
 		report.Description = adFull.Description
 		var links []string
-		for i, _ := range campaign.Post {
+		for i, oneAd := range campaign.Post {
 			adToGenerate, err := c.adUseCase.GetAdById(context.Background(), campaign.AgentId.ID, campaign.Post[i].ID)
 			if err != nil {
 				continue
 			}
+			likes += oneAd.NumOfLikes
+			dislikes += oneAd.NumOfDislikes
+			comments += oneAd.NumOfComments
 			links = append(links, adToGenerate.Link)
 		}
+		report.NumOfComments = comments
+		report.NumOfDislikes = dislikes
+		report.NumOfLikes = likes
+		report.AdvertisedLinks = links
 		report.AdvertisedLinks = links
 		retVal = append(retVal, report)
 	}

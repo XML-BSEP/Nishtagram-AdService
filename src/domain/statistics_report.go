@@ -8,4 +8,7 @@ type StatisticsReport struct {
 	AdvertisedLinks []string `json:"advertisedLinks"`
 	Clicks []events.ClickEvent `json:"clicks"`
 	AdvertisingCount AdvertisingCount `json:"advertisingCount"`
+	NumOfLikes int `json:"numOfLikes"`
+	NumOfDislikes int `json:"numOfDislikes"`
+	NumOfComments int `json:"numOfComments"`
 }
