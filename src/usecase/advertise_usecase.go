@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"ad_service/domain"
+	"ad_service/domain/events"
 	"ad_service/dto"
 	"ad_service/gateway"
 	"ad_service/repository"
@@ -12,12 +13,29 @@ type AdvertiseUseCase interface {
 	AddDisposableCampaignToAdvertisementTable(ctx context.Context, disposableCampaign domain.DisposableCampaign) error
 	AddMultipleCampaignToAdvertisementTable(ctx context.Context, multipleCampaign domain.MultipleCampaign) error
 	GetAllPostAdsForUser(ctx context.Context, profileId string) ([]dto.ShowAdPost, error)
-	GetAllStoryAdsForUser(ctx context.Context, profileId string) ([]domain.AdPost, error)
+	GetAllStoryAdsForUser(ctx context.Context, profileId string) ([]dto.StoryDTO, error)
+	GenerateStatisticsReport(ctx context.Context, agentId string, campaignId string) (domain.StatisticsReport, error)
+	AddClickEvent(ctx context.Context, event events.ClickEvent) error
 }
 
 type advertiseUseCase struct {
 	adPostUseCase AdPostUseCase
 	advertiseRepository repository.AdvertisementRepo
+	likeRepository repository.LikeRepo
+}
+
+func (a advertiseUseCase) AddClickEvent(ctx context.Context, event events.ClickEvent) error {
+	return a.advertiseRepository.InsertClickEvent(context.Background(), event.InfluencerId, event.CampaignId)
+}
+
+func (a advertiseUseCase) GenerateStatisticsReport(ctx context.Context, agentId string, campaignId string) (domain.StatisticsReport, error) {
+	timesAdvertised, err := a.advertiseRepository.GetTimesAdvertised(context.Background(), campaignId, agentId)
+	if err != nil {
+		return domain.StatisticsReport{}, err
+	}
+	clicks, err := a.advertiseRepository.GetNumberOfClicks(context.Background(), campaignId)
+	return domain.StatisticsReport{CampaignId: campaignId, Clicks: clicks, AdvertisingCount: timesAdvertised}, nil
+
 }
 
 func checkIfElementExists(list []string, element string) bool {
@@ -127,6 +145,13 @@ func (a advertiseUseCase) GetAllPostAdsForUser(ctx context.Context, profileId st
 		adToAdd.Timestamp = oneAd.Timestamp
 		adToAdd.PostBy = oneAd.AgentId.ID
 		adToAdd.Id = oneAd.ID
+		if a.likeRepository.SeeIfLikeExists(oneAd.ID, profileId, context.Background()) {
+			adToAdd.IsLiked = true
+		}
+
+		if  a.likeRepository.SeeIfDislikeExists(oneAd.ID, profileId, context.Background()) {
+			adToAdd.IsDisliked = true
+		}
 
 		retVal = append(retVal, adToAdd)
 	}
@@ -134,8 +159,8 @@ func (a advertiseUseCase) GetAllPostAdsForUser(ctx context.Context, profileId st
 	return retVal, nil
 }
 
-func (a advertiseUseCase) GetAllStoryAdsForUser(ctx context.Context, profileId string) ([]domain.AdPost, error) {
-	var retVal []domain.AdPost
+func (a advertiseUseCase) GetAllStoryAdsForUser(ctx context.Context, profileId string) ([]dto.StoryDTO, error) {
+	var retVal []dto.StoryDTO
 	adsToShow, err := a.advertiseRepository.GetAllStoryAdsForUser(ctx, profileId)
 	if err != nil {
 		return nil, err
@@ -146,12 +171,31 @@ func (a advertiseUseCase) GetAllStoryAdsForUser(ctx context.Context, profileId s
 		if err != nil {
 			continue
 		}
-		retVal = append(retVal, oneAd)
+		var story dto.StoryDTO
+		if oneAd.Type == 0 {
+			story.IsVideo = false
+		} else {
+			story.IsVideo = true
+		}
+		story.Story = oneAd.Path
+		story.Link = oneAd.Link
+		story.MediaPath.Path = oneAd.Path
+		story.CampaignId = adToShow.CampaignId
+		if oneAd.Type == 1 {
+			story.StoryContent = dto.StoryContent{IsVideo: true, Content: story.MediaPath.Path}
+		} else {
+			story.StoryContent = dto.StoryContent{IsVideo: false, Content: story.MediaPath.Path}
+		}
+		user, _ := gateway.GetUser(context.Background(), oneAd.AgentId.ID)
+		story.User = domain.Profile{ProfileId : oneAd.AgentId.ID, ProfilePhoto: user.ProfilePhoto, Username: user.Username}
+		story.Timestamp = oneAd.Timestamp
+
+		retVal = append(retVal, story)
 	}
 
 	return retVal, nil
 }
 
-func NewAdvertiseUseCase(adPostUseCase AdPostUseCase, advertiseRepository repository.AdvertisementRepo) AdvertiseUseCase {
-	return &advertiseUseCase{adPostUseCase: adPostUseCase, advertiseRepository: advertiseRepository}
+func NewAdvertiseUseCase(adPostUseCase AdPostUseCase, advertiseRepository repository.AdvertisementRepo, likeRepo repository.LikeRepo) AdvertiseUseCase {
+	return &advertiseUseCase{adPostUseCase: adPostUseCase, advertiseRepository: advertiseRepository, likeRepository: likeRepo}
 }

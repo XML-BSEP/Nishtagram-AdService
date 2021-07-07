@@ -95,7 +95,10 @@ func (c campaignRequestUseCase) ApproveDisposableCampaignRequest(ctx context.Con
 			createPostDto.Caption = ad.Description + " " + ad.Link
 			createPostDto.Location = ad.Location
 			createPostDto.Hashtags = ad.HashTags
+			createPostDto.CampaignId = campaign.ID
+			createPostDto.Link = ad.Link
 			createPostDto.UserId = dto.UserTag{UserId: request.InfluencerId}
+			createPostDto.CampaignId = request.DisposableCampaign.ID
 			err := gateway.AddPostFromCampaign(ctx, createPostDto)
 			if err != nil {
 				return err
@@ -116,7 +119,8 @@ func (c campaignRequestUseCase) ApproveDisposableCampaignRequest(ctx context.Con
 			createStory.Story = ad.Path
 			createStory.Location = domain.Location{Location: ad.Location}
 			createStory.CloseFriends = false
-
+			createStory.CampaignId = campaign.ID
+			createStory.Link = ad.Link
 			err := gateway.AddStoryFromCampaign(context.Background(), createStory)
 			if err != nil {
 				return err
@@ -166,7 +170,10 @@ func (c campaignRequestUseCase) ApproveMultipleCampaignRequest(ctx context.Conte
 			createPostDto.Caption = ad.Description + " " + ad.Link
 			createPostDto.Location = ad.Location
 			createPostDto.Hashtags = ad.HashTags
+			createPostDto.CampaignId = campaign.ID
+			createPostDto.Link = ad.Link
 			createPostDto.UserId = dto.UserTag{UserId: request.InfluencerId}
+			createPostDto.CampaignId = request.MultipleCampaign.ID
 			err := gateway.AddPostFromCampaign(context.Background(), createPostDto)
 			if err != nil {
 				return err
@@ -185,6 +192,8 @@ func (c campaignRequestUseCase) ApproveMultipleCampaignRequest(ctx context.Conte
 			}
 			createStory.UserId = request.InfluencerId
 			createStory.Story = ad.Path
+			createStory.CampaignId = campaign.ID
+			createStory.Link = ad.Link
 			createStory.Location = domain.Location{Location: ad.Location}
 			createStory.CloseFriends = false
 

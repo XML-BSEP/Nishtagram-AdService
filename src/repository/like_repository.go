@@ -8,36 +8,36 @@ import (
 )
 
 const (
-	CreateLikeTable = "CREATE TABLE if not exists adpost_keyspace.Likes (post_id text, timestamp timestamp, profile_id text, " +
-		"PRIMARY KEY (post_id, profile_id));"
-	CreateShowLikesTable = "CREATE TABLE IF NOT EXISTS adpost_keyspace.LikesToShow (profile_id text, post_id text, post_by text, timestamp timestamp, " +
-		"PRIMARY KEY (profile_id, post_id)) WITH CLUSTERING ORDER BY (post_id ASC);"
-	CreateShowDislikesTable = "CREATE TABLE IF NOT EXISTS adpost_keyspace.DislikesToShow (profile_id text, post_id text, post_by text, timestamp timestamp, " +
-		"PRIMARY KEY (profile_id, post_id)) WITH CLUSTERING ORDER BY (post_id ASC);"
-	InsertIntoShowDislikesTable = "INSERT INTO adpost_keyspace.DislikesToShow (profile_id, post_id, post_by, timestamp) VALUES (?, ?, ?, ?) IF NOT EXISTS;"
-	InsertIntoShowLikesTable = "INSERT INTO adpost_keyspace.LikesToShow (profile_id, post_id, post_by, timestamp) VALUES (?, ?, ?, ?) IF NOT EXISTS;"
-	DeleteFromShowDislikesTable = "DELETE FROM adpost_keyspace.DislikesToShow WHERE profile_id = ? AND post_id = ?;"
-	DeleteFromShowLikesTable = "DELETE FROM adpost_keyspace.LikesToShow WHERE profile_id = ? AND post_id = ?;"
-	GetAllLikedMedia = "SELECT profile_id, post_id, post_by, timestamp FROM adpost_keyspace.LikesToShow WHERE profile_id = ?"
-	GetAllDislikedMedia = "SELECT profile_id, post_id, post_by, timestamp FROM adpost_keyspace.DislikesToShow WHERE profile_id = ?"
-	CreateDislikeTable = "CREATE TABLE if not exists adpost_keyspace.Dislikes (post_id text, timestamp timestamp, profile_id text, " +
-		"PRIMARY KEY (post_id, profile_id));"
-	InsertLikeStatement = "INSERT INTO adpost_keyspace.Likes (post_id, timestamp, profile_id) VALUES (?, ?, ?) IF NOT EXISTS;"
-	InsertDislikeStatement  = "INSERT INTO adpost_keyspace.Dislikes (post_id, timestamp, profile_id) VALUES (?, ?, ?) IF NOT EXISTS;"
-	RemoveLike = "DELETE FROM adpost_keyspace.Likes WHERE post_id = ? AND profile_id = ?;"
-	RemoveDislike = "DELETE FROM adpost_keyspace.Dislikes WHERE post_id = ? AND profile_id = ?;"
-	GetAllLikesPerPost = "SELECT post_id, profiles_id, timestamp FROM adpost_keyspace.Likes WHERE post_id = ?;"
-	GetAllDislikesPerPost = "SELECT post_id, profiles_id, timestamp FROM adpost_keyspace.Dislikes WHERE post_id = ?;"
-	SeeIfLikeExists = "SELECT count(*) FROM adpost_keyspace.Likes WHERE post_id = ? AND profile_id = ?;"
-	SeeIfDislikeExists = "SELECT count(*) FROM adpost_keyspace.Dislikes WHERE post_id = ? AND profile_id = ?;"
-	GetNumOfLikesForPost = "SELECT num_of_likes FROM adpost_keyspace.Ad WHERE id = ? AND profile_id = ?;"
-	AddLikeToPost = "UPDATE post_keyspace.Posts SET num_of_likes = ? WHERE id = ? and profile_id = ?;"
-	AddDislikeToPost = "UPDATE post_keyspace.Posts SET num_of_dislikes = ? WHERE id = ? and profile_id = ?;"
-	GetNumOfDislikesForPost = "SELECT num_of_dislikes FROM post_keyspace.Posts WHERE id = ? AND profile_id = ?;"
-	GetNumOfCommentsForPost = "SELECT num_of_comments FROM post_keyspace.Posts WHERE id = ? AND profile_id = ?;"
-	RemoveLikeFromPost = "UPDATE post_keyspace.Posts SET num_of_likes = ? WHERE id = ? and profile_id = ?;"
-	RemoveDislikeFromPost = "UPDATE post_keyspace.Posts SET num_of_dislikes = ?  WHERE id = ? and profile_id = ?;"
-	RemoveCommentFromPost = "UPDATE post_keyspace.Posts SET num_of_comments = ? WHERE id = ? and profile_id = ?;"
+	CreateLikeTable = "CREATE TABLE if not exists adpost_keyspace.Likes (ad_id text, timestamp timestamp, profile_id text, " +
+		"PRIMARY KEY (ad_id, profile_id));"
+	CreateShowLikesTable = "CREATE TABLE IF NOT EXISTS adpost_keyspace.LikesToShow (profile_id text, ad_id text, agent_id text, timestamp timestamp, " +
+		"PRIMARY KEY (profile_id, ad_id)) WITH CLUSTERING ORDER BY (ad_id ASC);"
+	CreateShowDislikesTable = "CREATE TABLE IF NOT EXISTS adpost_keyspace.DislikesToShow (profile_id text, ad_id text, agent_id text, timestamp timestamp, " +
+		"PRIMARY KEY (profile_id, ad_id)) WITH CLUSTERING ORDER BY (ad_id ASC);"
+	InsertIntoShowDislikesTable = "INSERT INTO adpost_keyspace.DislikesToShow (profile_id, ad_id, agent_id, timestamp) VALUES (?, ?, ?, ?) IF NOT EXISTS;"
+	InsertIntoShowLikesTable = "INSERT INTO adpost_keyspace.LikesToShow (profile_id, ad_id, agent_id, timestamp) VALUES (?, ?, ?, ?) IF NOT EXISTS;"
+	DeleteFromShowDislikesTable = "DELETE FROM adpost_keyspace.DislikesToShow WHERE profile_id = ? AND ad_id = ?;"
+	DeleteFromShowLikesTable = "DELETE FROM adpost_keyspace.LikesToShow WHERE profile_id = ? AND ad_id = ?;"
+	GetAllLikedMedia = "SELECT profile_id, ad_id, agent_id, timestamp FROM adpost_keyspace.LikesToShow WHERE profile_id = ?"
+	GetAllDislikedMedia = "SELECT profile_id, ad_id, agent_id, timestamp FROM adpost_keyspace.DislikesToShow WHERE profile_id = ?"
+	CreateDislikeTable = "CREATE TABLE if not exists adpost_keyspace.Dislikes (ad_id text, timestamp timestamp, profile_id text, " +
+		"PRIMARY KEY (ad_id, profile_id));"
+	InsertLikeStatement = "INSERT INTO adpost_keyspace.Likes (ad_id, timestamp, profile_id) VALUES (?, ?, ?) IF NOT EXISTS;"
+	InsertDislikeStatement  = "INSERT INTO adpost_keyspace.Dislikes (ad_id, timestamp, profile_id) VALUES (?, ?, ?) IF NOT EXISTS;"
+	RemoveLike = "DELETE FROM adpost_keyspace.Likes WHERE ad_id = ? AND profile_id = ?;"
+	RemoveDislike = "DELETE FROM adpost_keyspace.Dislikes WHERE ad_id = ? AND profile_id = ?;"
+	GetAllLikesPerPost = "SELECT post_id, profiles_id, timestamp FROM adpost_keyspace.Likes WHERE ad_id = ?;"
+	GetAllDislikesPerPost = "SELECT post_id, profiles_id, timestamp FROM adpost_keyspace.Dislikes WHERE ad_id = ?;"
+	SeeIfLikeExists = "SELECT count(*) FROM adpost_keyspace.Likes WHERE ad_id = ? AND profile_id = ?;"
+	SeeIfDislikeExists = "SELECT count(*) FROM adpost_keyspace.Dislikes WHERE ad_id = ? AND profile_id = ?;"
+	GetNumOfLikesForPost = "SELECT num_of_likes FROM adpost_keyspace.AdPosts WHERE id = ? AND agent_id = ?;"
+	AddLikeToPost = "UPDATE adpost_keyspace.AdPosts SET num_of_likes = ? WHERE id = ? and agent_id = ?;"
+	AddDislikeToPost = "UPDATE adpost_keyspace.AdPosts SET num_of_dislikes = ? WHERE id = ? and agent_id = ?;"
+	GetNumOfDislikesForPost = "SELECT num_of_dislikes FROM adpost_keyspace.AdPosts WHERE id = ? AND agent_id = ?;"
+	GetNumOfCommentsForPost = "SELECT num_of_comments FROM adpost_keyspace.AdPosts WHERE id = ? AND agent_id = ?;"
+	RemoveLikeFromPost = "UPDATE adpost_keyspace.AdPosts SET num_of_likes = ? WHERE id = ? and agent_id = ?;"
+	RemoveDislikeFromPost = "UPDATE adpost_keyspace.AdPosts SET num_of_dislikes = ?  WHERE id = ? and agent_id = ?;"
+	RemoveCommentFromPost = "UPDATE adpost_keyspace.AdPosts SET num_of_comments = ? WHERE id = ? and agent_id = ?;"
 
 
 

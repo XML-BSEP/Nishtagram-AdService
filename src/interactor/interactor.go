@@ -11,23 +11,31 @@ type appHandler struct {
 	handler.CampaignHandler
 	handler.CampaignRequestHandler
 	handler.AdvertiseHandler
+	handler.LikeHandler
+	handler.CommentHandler
 }
 type Interactor interface {
 	NewAdPostRepo() repository.AdPostRepo
 	NewCampaignRepo() repository.CampaignRepo
 	NewCampaignRequestRepo() repository.CampaignRequestRepo
 	NewAdvertisementRepo() repository.AdvertisementRepo
+	NewCommentRepo() repository.CommentRepo
+	NewLikeRepo() repository.LikeRepo
 
 
 	NewAdPostUseCase() usecase.AdPostUseCase
 	NewCampaignUseCase() usecase.CampaignUseCase
 	NewCampaignRequestUseCase() usecase.CampaignRequestUseCase
 	NewAdvertisementUseCase() usecase.AdvertiseUseCase
+	NewLikeUseCase() usecase.LikeUseCase
+	NewCommentUseCase() usecase.CommentUseCase
 
 	NewAdPostHandler() handler.AdHandler
 	NewCampaignHandler() handler.CampaignHandler
 	NewCampaignRequestHandler() handler.CampaignRequestHandler
 	NewAdvertisementHandler() handler.AdvertiseHandler
+	NewLikeHandler() handler.LikeHandler
+	NewCommentHandler() handler.CommentHandler
 
 	NewAppHandler() handler.AppHandler
 }
@@ -36,12 +44,36 @@ type interctor struct {
 	cassandraClient *gocql.Session
 }
 
+func (i interctor) NewCommentRepo() repository.CommentRepo {
+	return repository.NewCommentRepository(i.cassandraClient)
+}
+
+func (i interctor) NewLikeRepo() repository.LikeRepo {
+	return repository.NewLikeRepository(i.cassandraClient)
+}
+
+func (i interctor) NewLikeUseCase() usecase.LikeUseCase {
+	return usecase.NewLikeUseCase(i.NewLikeRepo())
+}
+
+func (i interctor) NewCommentUseCase() usecase.CommentUseCase {
+	return usecase.NewCommentUseCase(i.NewCommentRepo())
+}
+
+func (i interctor) NewLikeHandler() handler.LikeHandler {
+	return handler.NewLikeHandler(i.NewLikeUseCase())
+}
+
+func (i interctor) NewCommentHandler() handler.CommentHandler {
+	return handler.NewCommentHandler(i.NewCommentUseCase())
+}
+
 func (i interctor) NewAdvertisementRepo() repository.AdvertisementRepo {
 	return repository.NewAdvertisementRepository(i.cassandraClient)
 }
 
 func (i interctor) NewAdvertisementUseCase() usecase.AdvertiseUseCase {
-	return usecase.NewAdvertiseUseCase(i.NewAdPostUseCase(), i.NewAdvertisementRepo())
+	return usecase.NewAdvertiseUseCase(i.NewAdPostUseCase(), i.NewAdvertisementRepo(), i.NewLikeRepo())
 }
 
 func (i interctor) NewAdvertisementHandler() handler.AdvertiseHandler {
@@ -90,6 +122,8 @@ func (i interctor) NewAppHandler() handler.AppHandler {
 	appHandler.CampaignHandler = i.NewCampaignHandler()
 	appHandler.CampaignRequestHandler = i.NewCampaignRequestHandler()
 	appHandler.AdvertiseHandler = i.NewAdvertisementHandler()
+	appHandler.LikeHandler = i.NewLikeHandler()
+	appHandler.CommentHandler = i.NewCommentHandler()
 
 	return appHandler
 }

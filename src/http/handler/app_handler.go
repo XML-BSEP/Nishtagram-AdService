@@ -5,4 +5,6 @@ type AppHandler interface {
 	CampaignHandler
 	CampaignRequestHandler
 	AdvertiseHandler
+	LikeHandler
+	CommentHandler
 }
