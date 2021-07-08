@@ -11,4 +11,7 @@ type StatisticsReport struct {
 	NumOfLikes int `json:"numOfLikes"`
 	NumOfDislikes int `json:"numOfDislikes"`
 	NumOfComments int `json:"numOfComments"`
+	CampaignType string `xml:"campaign_type" json:"campaignType"`
+	CampaignPeriod string `xml:"campaign_period" json:"campaignPeriod"`
+	AdvertisementFrequency string `xml:"advertisement_frequency" json:"advertisementFrequency"`
 }

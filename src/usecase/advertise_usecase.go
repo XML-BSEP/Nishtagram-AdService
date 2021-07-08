@@ -33,8 +33,21 @@ func (a advertiseUseCase) GenerateStatisticsReport(ctx context.Context, agentId 
 	if err != nil {
 		return domain.StatisticsReport{}, err
 	}
+	var clicksToAdd []events.ClickEvent
 	clicks, err := a.advertiseRepository.GetNumberOfClicks(context.Background(), campaignId)
-	return domain.StatisticsReport{CampaignId: campaignId, Clicks: clicks, AdvertisingCount: timesAdvertised}, nil
+	for _, click := range clicks {
+		user, err := gateway.GetUser(context.Background(), click.InfluencerId)
+		if err != nil {
+			continue
+		}
+		click.InfluencerUsername = user.Username
+		clicksToAdd = append(clicksToAdd, click)
+	}
+	if clicks == nil {
+		return domain.StatisticsReport{CampaignId: campaignId, Clicks: []events.ClickEvent{}, AdvertisingCount: timesAdvertised}, nil
+
+	}
+	return domain.StatisticsReport{CampaignId: campaignId, Clicks: clicksToAdd, AdvertisingCount: timesAdvertised}, nil
 
 }
 
