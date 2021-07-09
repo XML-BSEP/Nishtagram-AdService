@@ -6,15 +6,12 @@ WORKDIR /src
 # Copy go mod and sum files
 COPY go.mod go.sum ./
 
-COPY Nishtagram-Logger/ ../../Nishtagram-Logger/
-
 # Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
 RUN go mod download
 
 # Copy everything from the current directory to the Working Directory inside the container
-COPY . .
+COPY .. .
 
-RUN go get github.com/mattn/go-isatty@v0.0.12
 # Build the Go app
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
@@ -27,6 +24,7 @@ WORKDIR /root/
 COPY --from=builder /src/config ./src/config
 COPY --from=builder /src/main .
 COPY --from=builder /src/assets ./src/assets
+COPY --from=builder /src/dto ./src/dto
 COPY --from=builder /src/domain ./src/domain
 COPY --from=builder /src/http ./src/http
 COPY --from=builder /src/infrastructure ./src/infrastructure

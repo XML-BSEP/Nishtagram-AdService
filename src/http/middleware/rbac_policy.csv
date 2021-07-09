@@ -6,6 +6,7 @@ p, AGENT, /ad/getAllDisposableCampaigns, *
 p, AGENT, /ad/getAllMultipleCampaigns, *
 p, AGENT, /ad/updateMultipleCampaign, *
 p, AGENT, /ad/deleteMultipleCampaign, *
+p, AGENT, /ad/deleteDisposableCampaign, *
 p, AGENT, /ad/createDisposableCampaignRequest, *
 p, AGENT, /ad/createMultipleCampaignRequest, *
 p, USER, /ad/approveDisposableCampaignRequest, *
