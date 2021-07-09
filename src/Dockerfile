@@ -31,6 +31,7 @@ COPY --from=builder /src/infrastructure ./src/infrastructure
 COPY --from=builder /src/interactor ./src/interactor
 COPY --from=builder /src/repository ./src/repository
 COPY --from=builder /src/usecase ./src/usecase
+COPY --from=builder /src/dto ./src/dto
 
 # Command to run the executable
 CMD ["./main"]
