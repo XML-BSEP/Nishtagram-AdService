@@ -10,6 +10,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -43,6 +44,7 @@ func (c campaignUseCase) GenerateStatisticsReport(ctx context.Context, agentId s
 	var retVal []domain.StatisticsReport
 	var likes, dislikes, comments int
 	for _,campaign := range campaigns {
+
 		likes, dislikes, comments = 0, 0, 0
 		report, err := c.advertiseUseCase.GenerateStatisticsReport(context.Background(), agentId, campaign.ID)
 		if err != nil {
@@ -61,6 +63,9 @@ func (c campaignUseCase) GenerateStatisticsReport(ctx context.Context, agentId s
 			}
 			links = append(links, adToGenerate.Link)
 		}
+		report.CampaignType = "Multiple"
+		report.CampaignPeriod = campaign.StartDate.Format("02.01.2006") + " - " + campaign.EndDate.Format("02.01.2006")
+		report.AdvertisementFrequency = strconv.Itoa(campaign.AdvertisementFrequency)
 		report.NumOfComments = comments
 		report.NumOfDislikes = dislikes
 		report.NumOfLikes = likes
@@ -91,6 +96,9 @@ func (c campaignUseCase) GenerateStatisticsReport(ctx context.Context, agentId s
 			comments += oneAd.NumOfComments
 			links = append(links, adToGenerate.Link)
 		}
+		report.CampaignType = "Disposable"
+		report.CampaignPeriod = campaign.ExposureDate.Format("02.01.2006")
+		report.AdvertisementFrequency = "1"
 		report.NumOfComments = comments
 		report.NumOfDislikes = dislikes
 		report.NumOfLikes = likes
