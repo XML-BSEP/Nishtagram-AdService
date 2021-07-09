@@ -3,12 +3,16 @@ package router
 import (
 	"ad_service/http/handler"
 	"ad_service/http/middleware"
+	"ad_service/http/middleware/prometheus_middleware"
 	"github.com/gin-gonic/gin"
 )
 
 func NewRouter(handler handler.AppHandler) *gin.Engine {
 	router := gin.Default()
 
+	requestCounter := prometheus_middleware.GetHttpRequestsCounter()
+	router.Use(prometheus_middleware.PrometheusMiddleware(requestCounter))
+	router.GET("/metrics", prometheus_middleware.PrometheusGinHandler())
 	g := router.Group("/ad")
 
 	g.Use(middleware.AuthMiddleware())
