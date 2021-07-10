@@ -3,7 +3,7 @@
   "docker": true,
   "server" : {
     "domain_localhost": "127.0.0.1",
-    "domain_docker" : "cassandraad",
+    "domain_docker" : "cassandrapost",
     "port_docker": 9042,
 
     "port_localhost": 7000

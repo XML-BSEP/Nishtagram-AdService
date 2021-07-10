@@ -11,7 +11,7 @@ import (
 
 func init_viper() {
 	if os.Getenv("DOCKER_ENV") != "" {
-		viper.SetConfigFile(`config/cassandra.json`)
+		viper.SetConfigFile(`src/config/cassandra.json`)
 	} else {
 		viper.SetConfigFile(`src/config/cassandra.json`)
 	}

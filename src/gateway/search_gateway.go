@@ -11,7 +11,7 @@ import (
 
 func GetProfilesByLocation(ctx context.Context, location string) ([]string, error) {
 	client := resty.New()
-	userDomain := os.Getenv("POST_DOMAIN")
+	userDomain := os.Getenv("SEARCH_DOMAIN")
 	if userDomain == "" {
 		userDomain = "127.0.0.1"
 	}
@@ -63,7 +63,7 @@ func GetProfilesByLocation(ctx context.Context, location string) ([]string, erro
 
 func GetProfilesByHashtag(ctx context.Context, hashtag string) ([]string, error) {
 	client := resty.New()
-	userDomain := os.Getenv("POST_DOMAIN")
+	userDomain := os.Getenv("SEARCH_DOMAIN")
 	if userDomain == "" {
 		userDomain = "127.0.0.1"
 	}
